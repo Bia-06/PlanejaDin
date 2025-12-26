@@ -1,16 +1,49 @@
-# React + Vite
+# PlanejaDin 💸
+> **Planeje hoje, tranquilidade amanhã.**
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+O **PlanejaDin** é uma aplicação web completa para gestão financeira pessoal. O objetivo é simplificar o controle de receitas e despesas através de uma interface moderna, intuitiva e responsiva.
 
-Currently, two official plugins are available:
+O projeto foi desenvolvido focando em performance e experiência do usuário (UX), oferecendo recursos como visualização em calendário, modo escuro e relatórios gráficos.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🚀 Tecnologias Utilizadas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+O projeto foi construído com uma stack moderna focada em escalabilidade e produtividade:
 
-## Expanding the ESLint configuration
+- **Frontend:** [React](https://react.dev/) + [Vite](https://vitejs.dev/) (para performance extrema).
+- **Estilização:** [Tailwind CSS](https://tailwindcss.com/) (design responsivo e Dark Mode nativo).
+- **Backend & Auth:** [Supabase](https://supabase.com/) (Banco de dados PostgreSQL, Autenticação e Storage).
+- **Ícones:** [Lucide React](https://lucide.dev/).
+- **Hospedagem:** [Vercel](https://vercel.com/).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## ✨ Funcionalidades Principais
+
+- **Dashboard Interativo:** Resumo financeiro com gráficos e saldo atualizado em tempo real.
+- **Gestão de Transações:** Adicionar, editar e excluir receitas e despesas (com suporte a parcelamento).
+- **Calendário Financeiro:** Visualização mensal com marcação de feriados nacionais e indicadores de contas a pagar/receber.
+- **Sistema de Lembretes:** Nunca mais esqueça o vencimento de uma conta.
+- **Autenticação Segura:** Login, Cadastro e Recuperação de Senha via e-mail (Magic Link).
+- **Modo Escuro (Dark Mode):** Alternância de tema suave para conforto visual.
+- **Configurações de Perfil:** Upload de foto de perfil, alteração de dados e "Zona de Perigo" para exclusão de conta.
+
+---
+
+## 🔧 Como rodar o projeto localmente
+
+1. **Clone o repositório:**
+   ```bash
+   git clone [https://github.com/SEU_USUARIO/planejadin.git](https://github.com/SEU_USUARIO/planejadin.git)
+
+2. **Instale as dependências**
+   cd planejadin
+   npm install
+
+3. **Configure as Variáveis de Ambiente: Crie um arquivo .env na raiz do projeto e adicione suas credenciais do Supabase:**
+   VITE_SUPABASE_URL=sua_url_do_supabase
+   VITE_SUPABASE_ANON_KEY=sua_chave_anon_do_supabase
+
+4. **Inicie o servidor de desenvolvimento**
+   npm run dev

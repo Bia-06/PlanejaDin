@@ -8,7 +8,7 @@ const RemindersView = ({ reminders = [], handleDelete, openModal }) => {
   return (
     <div className="animate-fadeIn pb-24 font-inter">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-teal dark:text-white font-poppins">Agenda Financeira</h2>
+        <h2 className="text-2xl font-bold text-teal dark:text-white font-poppins">Seus Lembretes</h2>
         <Button onClick={() => openModal('reminder')} variant="primary" className="text-sm px-4 py-2">
           <Plus className="w-5 h-5" /> Novo Lembrete
         </Button>
@@ -19,7 +19,7 @@ const RemindersView = ({ reminders = [], handleDelete, openModal }) => {
           <div className="col-span-2 text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-700">
             <Bell className="w-16 h-16 mx-auto mb-4 text-mint opacity-20" />
             <h3 className="text-xl font-bold text-teal dark:text-white">Você está livre de lembretes!! 🎉</h3>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">Sua agenda financeira não possui pendências para os próximos dias.</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">Você não possui lembretes para os próximos dias.</p>
           </div>
         ) : (
           reminders.map(rem => (

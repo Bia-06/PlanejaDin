@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { 
   User, Camera, Tag, Plus, X, Sun, Moon, LogOut, 
-  Mail, Lock, Phone, Info, Eye, EyeOff, Loader 
+  Mail, Lock, Phone, Info, Eye, EyeOff, Loader, Trash2 
 } from 'lucide-react';
 import { supabase } from '../config/supabase'; 
 import Card from './UI/Card';
@@ -30,6 +30,7 @@ const SettingsView = ({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
   const fileInputRef = useRef(null);
@@ -179,6 +180,29 @@ const SettingsView = ({
     }
   };
 
+  const handleDeleteAccount = async () => {
+    const confirmation = window.confirm("ATENÇÃO: Essa ação é irreversível!\n\nIsso apagará TODOS os seus dados (transações, categorias, lembretes). Tem certeza absoluta?");
+    
+    if (confirmation) {
+        const doubleCheck = window.prompt("Digite 'DELETAR' para confirmar a exclusão:");
+        if (doubleCheck !== 'DELETAR') return;
+
+        setIsDeleting(true);
+        try {
+            await supabase.from('transactions').delete().eq('user_id', user.id);
+            await supabase.from('reminders').delete().eq('user_id', user.id);
+            await supabase.from('categories').delete().eq('user_id', user.id);
+            await onLogout();
+            alert("Sua conta foi limpa e desativada.");
+        } catch (error) {
+            console.error("Erro ao excluir conta:", error);
+            alert("Erro ao processar exclusão. Tente novamente.");
+        } finally {
+            setIsDeleting(false);
+        }
+    }
+  };
+
   const inputStyle = { paddingLeft: '3.5rem', paddingRight: '3rem' };
   const passwordInputStyle = { paddingLeft: '3.5rem', paddingRight: '3rem' };
   const passwordRequirements = validatePasswordRequirements(formData.password);
@@ -189,6 +213,7 @@ const SettingsView = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
+        {/* CARD DE PERFIL (Esquerda) */}
         <Card>
           <div className="flex flex-col items-center mb-8">
             <div 
@@ -223,19 +248,13 @@ const SettingsView = ({
             <p className="text-gray-600 dark:text-gray-400 text-sm">Editar perfil</p>
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
+          <div className="space-y-1">
+            <div className="grid grid-cols-1 gap-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Nome Completo</label>
                 <div className="relative">
                   <User className="absolute left-4 top-3 w-5 h-5 text-gray-400 z-10" />
-                  <Input 
-                    name="name"
-                    value={formData.name} 
-                    onChange={handleChange} 
-                    placeholder="Seu nome"
-                    style={inputStyle}
-                  />
+                  <Input name="name" value={formData.name} onChange={handleChange} placeholder="Seu nome" style={inputStyle} />
                 </div>
               </div>
 
@@ -243,13 +262,7 @@ const SettingsView = ({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-3 w-5 h-5 text-gray-400 z-10" />
-                  <Input 
-                    name="email"
-                    value={formData.email} 
-                    onChange={handleChange} 
-                    placeholder="seu@email.com"
-                    style={inputStyle}
-                  />
+                  <Input name="email" value={formData.email} onChange={handleChange} placeholder="seu@email.com" style={inputStyle} />
                 </div>
               </div>
 
@@ -257,60 +270,30 @@ const SettingsView = ({
                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Telefone</label>
                  <div className="relative">
                   <Phone className="absolute left-4 top-3 w-5 h-5 text-gray-400 z-10" />
-                  <Input 
-                    name="phone"
-                    value={formData.phone} 
-                    onChange={handleChange} 
-                    placeholder="(00) 00000-0000"
-                    style={inputStyle}
-                    maxLength={15}
-                  />
+                  <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="(00) 00000-0000" style={inputStyle} maxLength={15} />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Nova Senha</label>
-                   <div className="relative">
-                    <Lock className="absolute left-4 top-3 w-5 h-5 text-gray-400 z-10" />
-                    <Input 
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      value={formData.password} 
-                      onChange={handleChange} 
-                      placeholder="********"
-                      style={passwordInputStyle}
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-3 text-gray-400 hover:text-teal dark:hover:text-gray-300 z-10"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
+              {/* MUDANÇA: Senhas uma embaixo da outra para alinhar altura */}
+              <div>
+                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Nova Senha</label>
+                 <div className="relative">
+                  <Lock className="absolute left-4 top-3 w-5 h-5 text-gray-400 z-10" />
+                  <Input name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} placeholder="********" style={passwordInputStyle} />
+                  <button type="button" className="absolute right-3 top-3 text-gray-400 hover:text-teal dark:hover:text-gray-300 z-10" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
-                
-                <div>
-                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Confirmar Senha</label>
-                   <div className="relative">
-                    <Lock className="absolute left-4 top-3 w-5 h-5 text-gray-400 z-10" />
-                    <Input 
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={formData.confirmPassword} 
-                      onChange={handleChange} 
-                      placeholder="********"
-                      style={passwordInputStyle}
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-3 text-gray-400 hover:text-teal dark:hover:text-gray-300 z-10"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
+              </div>
+              
+              <div>
+                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Confirmar Senha</label>
+                 <div className="relative">
+                  <Lock className="absolute left-4 top-3 w-5 h-5 text-gray-400 z-10" />
+                  <Input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={formData.confirmPassword} onChange={handleChange} placeholder="********" style={passwordInputStyle} />
+                  <button type="button" className="absolute right-3 top-3 text-gray-400 hover:text-teal dark:hover:text-gray-300 z-10" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
 
@@ -324,21 +307,11 @@ const SettingsView = ({
                       </span>
                     </div>
                   )}
-                  
                   {formData.password.length > 0 && (
                     <div className="text-xs space-y-1.5">
-                      <div className={`flex items-center gap-1.5 ${passwordRequirements.length ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        <div className={`w-2 h-2 rounded-full ${passwordRequirements.length ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                        Pelo menos 8 caracteres
-                      </div>
-                      <div className={`flex items-center gap-1.5 ${passwordRequirements.uppercase ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        <div className={`w-2 h-2 rounded-full ${passwordRequirements.uppercase ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                        Pelo menos uma letra maiúscula
-                      </div>
-                      <div className={`flex items-center gap-1.5 ${passwordRequirements.specialChar ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        <div className={`w-2 h-2 rounded-full ${passwordRequirements.specialChar ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                        Pelo menos um caractere especial (!@#$%^&*)
-                      </div>
+                       <div className={`flex items-center gap-1.5 ${passwordRequirements.length ? 'text-green-600' : 'text-red-600'}`}><div className={`w-2 h-2 rounded-full ${passwordRequirements.length ? 'bg-green-500' : 'bg-red-500'}`}></div> 8+ caracteres</div>
+                       <div className={`flex items-center gap-1.5 ${passwordRequirements.uppercase ? 'text-green-600' : 'text-red-600'}`}><div className={`w-2 h-2 rounded-full ${passwordRequirements.uppercase ? 'bg-green-500' : 'bg-red-500'}`}></div> Maiúscula</div>
+                       <div className={`flex items-center gap-1.5 ${passwordRequirements.specialChar ? 'text-green-600' : 'text-red-600'}`}><div className={`w-2 h-2 rounded-full ${passwordRequirements.specialChar ? 'bg-green-500' : 'bg-red-500'}`}></div> Especial</div>
                     </div>
                   )}
                 </div>
@@ -346,50 +319,28 @@ const SettingsView = ({
             </div>
 
             <div className="pt-4">
-              <Button 
-                onClick={handleSaveProfile} 
-                variant="primary" 
-                className="w-full flex items-center justify-center gap-2"
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <>
-                    <Loader className="animate-spin w-5 h-5" /> Salvando...
-                  </>
-                ) : (
-                  'Salvar Alterações'
-                )}
+              <Button onClick={handleSaveProfile} variant="primary" className="w-full flex items-center justify-center gap-2" disabled={isSaving}>
+                {isSaving ? <><Loader className="animate-spin w-5 h-5" /> Salvando...</> : 'Salvar Alterações'}
               </Button>
             </div>
           </div>
         </Card>
 
+        {/* COLUNA DIREITA */}
         <div className="space-y-6">
           <Card>
             <h3 className="font-bold text-lg text-teal dark:text-white mb-4 flex items-center gap-2 font-poppins">
               <Tag className="w-5 h-5 text-mint" /> Categorias
             </h3>
             <div className="flex gap-2 mb-4">
-              <input 
-                className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-teal dark:text-white text-sm outline-none focus:ring-2 focus:ring-mint transition-all"
-                placeholder="Nova Categoria..."
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
-              />
+              <input className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-teal dark:text-white text-sm outline-none focus:ring-2 focus:ring-mint transition-all" placeholder="Nova Categoria..." value={newCategory} onChange={(e) => setNewCategory(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()} />
               <button onClick={handleAddCategory} className="bg-mint text-white p-2 rounded-xl hover:bg-[#00b57a] transition-colors"><Plus size={20}/></button>
             </div>
-            
             <div className="max-h-[200px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
               {categories.map(cat => (
                 <div key={cat.id} className="flex justify-between items-center p-3 bg-bgLight dark:bg-gray-700/50 rounded-xl group hover:bg-white dark:hover:bg-gray-700 border border-transparent hover:border-gray-100 dark:hover:border-gray-600 transition-all">
                   <span className="text-sm font-medium text-teal dark:text-gray-300">{cat.name}</span>
-                  <button 
-                    onClick={() => deleteCategory(cat.id)} 
-                    className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X size={16} />
-                  </button>
+                  <button onClick={() => deleteCategory(cat.id)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} /></button>
                 </div>
               ))}
             </div>
@@ -402,51 +353,37 @@ const SettingsView = ({
                 {isDarkMode ? <Moon className="text-teal dark:text-white w-5 h-5" /> : <Sun className="text-yellow w-5 h-5" />}
                 <span className="text-teal font-medium dark:text-gray-200">Modo Escuro</span>
               </div>
-              <button 
-                onClick={() => setIsDarkMode(!isDarkMode)} 
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isDarkMode ? 'bg-mint' : 'bg-gray-300'}`}
-              >
+              <button onClick={() => setIsDarkMode(!isDarkMode)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isDarkMode ? 'bg-mint' : 'bg-gray-300'}`}>
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition transition-transform ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
             
-            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <Button 
-                onClick={handleLogout} 
-                variant="danger" 
-                className="w-full flex items-center justify-center gap-2"
-                disabled={isLoggingOut}
-              >
-                {isLoggingOut ? (
-                  <>
-                    <Loader className="animate-spin w-4 h-4" /> Sair...
-                  </>
-                ) : (
-                  <>
-                    <LogOut className="w-5 h-5" /> Sair da Conta
-                  </>
-                )}
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
+              <Button onClick={handleLogout} variant="secondary" className="w-full flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-600 hover:bg-gray-100" disabled={isLoggingOut}>
+                {isLoggingOut ? <Loader className="animate-spin w-4 h-4" /> : <><LogOut className="w-5 h-5" /> Sair da Conta</>}
               </Button>
+
+              <button 
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="w-full flex items-center justify-center gap-2 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors text-sm font-bold mt-2"
+              >
+                 {isDeleting ? <Loader className="animate-spin w-4 h-4" /> : <><Trash2 className="w-4 h-4" /> Excluir Conta</>}
+              </button>
             </div>
           </Card>
 
-          {/* SESSÃO SOBRE O APP ATUALIZADA */}
           <Card className="opacity-80 hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-3 mb-2">
               <Info className="w-5 h-5 text-mint" />
               <h3 className="font-bold text-teal dark:text-white">Sobre o App</h3>
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-               <p className="flex justify-between">
-                <span>Versão Atual:</span>
-                <span className="font-mono font-bold text-teal dark:text-white">v1.0.0 (Beta)</span>
-              </p>
-              <p className="flex justify-between">
-                <span>Última Atualização:</span>
-                <span>22 Dez 2025</span>
-              </p>
+               <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.0.0 (Beta)</span></p>
+               <p className="flex justify-between"><span>Última Atualização:</span><span>26 Dez 2025</span></p>
               <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400">
-                Feito com 💜 por <span className="text-mint font-bold">Beatriz Pires</span>
+                {/* MUDANÇA: Link adicionado aqui */}
+                Feito com 💜 por <a href="https://portfolio--beatriz.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-mint font-bold hover:underline transition-all">Beatriz Pires</a>
               </div>
             </div>
           </Card>

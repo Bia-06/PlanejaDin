@@ -13,12 +13,17 @@ const CalendarView = ({ transactions = [], reminders = [] }) => {
   // Lista de Feriados Fixos (Dia-Mês)
   const fixedHolidays = {
     '1-1': 'Ano Novo',
+    '16-2': 'Carnaval',
+    '17-2': 'Carnaval',
+    '18-2': 'Carnaval',
     '21-4': 'Tiradentes',
     '1-5': 'Dia do Trabalho',
+    '4-6': 'Corpus Christi',
     '7-9': 'Independência',
     '12-10': 'N. Sra. Aparecida',
     '2-11': 'Finados',
     '15-11': 'Proclamação da República',
+    '20-11': 'Consciência Negra',
     '25-12': 'Natal'
   };
 
@@ -79,7 +84,7 @@ const CalendarView = ({ transactions = [], reminders = [] }) => {
     <div className="animate-fadeIn pb-24 font-inter">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-teal dark:text-white font-poppins">Calendário Financeiro</h2>
+          <h2 className="text-2xl font-bold text-teal dark:text-white font-poppins">Calendário</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Visualize suas movimentações por data</p>
         </div>
         
@@ -181,7 +186,7 @@ const CalendarView = ({ transactions = [], reminders = [] }) => {
                     <div className="w-full space-y-1 overflow-hidden">
                       {holidayName && (
                           // Ajustado amarelo brilhante no texto do feriado
-                          <div className="text-[10px] px-1 py-0.5 rounded truncate w-full text-left bg-yellow/10 text-yellow-600 border border-yellow/20 font-bold dark:text-yellow-300 dark:border-yellow-300/30 dark:bg-yellow-400/10">
+                          <div className="text-[10px] px-1 py-0.5 rounded truncate w-full text-left bg-yellow/10 text-yellow-600 border border-yellow/20 font-bold dark:text-yellow dark:border-yellow-300/30 dark:bg-yellow-400/10">
                             {holidayName}
                           </div>
                       )}
@@ -219,8 +224,8 @@ const CalendarView = ({ transactions = [], reminders = [] }) => {
                 <h3 className="font-bold text-lg text-teal dark:text-white">Detalhes do Dia</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{selectedDayEvents.date}</p>
                 {checkHoliday(selectedDay, month) && (
-                   <p className="text-xs font-bold flex items-center gap-1 mt-1 text-yellow-600 dark:text-yellow-300">
-                     <Star size={10} className="fill-yellow-500 text-yellow-500 dark:text-yellow-300 dark:fill-yellow-300" /> 
+                   <p className="text-sm font-bold flex items-center gap-1 mt-2 text-yellow-600 dark:text-yellow fill-yellow">
+                     <Star size={10} className="lucide lucide-star w-5 h-5 text-yellow fill-yellow" /> 
                      {checkHoliday(selectedDay, month)}
                    </p>
                 )}
