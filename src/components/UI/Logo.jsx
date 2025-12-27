@@ -14,7 +14,7 @@ const Logo = ({
       <div className={`${width} overflow-hidden`}>
         <img 
           src="/logo.png" 
-          alt="PlanejaDin Logo"
+          alt="GerenciaDin Logo"
           className="w-full h-auto object-contain drop-shadow-lg"
         />
       </div>

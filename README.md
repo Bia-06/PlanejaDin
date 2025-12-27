@@ -1,7 +1,7 @@
-# PlanejaDin 💸
+# GerenciaDin 💸
 > **Planeje hoje, tranquilidade amanhã.**
 
-O **PlanejaDin** é uma aplicação web completa para gestão financeira pessoal. O objetivo é simplificar o controle de receitas e despesas através de uma interface moderna, intuitiva e responsiva.
+O **GerenciaDin** é uma aplicação web completa para gestão financeira pessoal. O objetivo é simplificar o controle de receitas e despesas através de uma interface moderna, intuitiva e responsiva.
 
 O projeto foi desenvolvido focando em performance e experiência do usuário (UX), oferecendo recursos como visualização em calendário, modo escuro e relatórios gráficos.
 
@@ -35,10 +35,10 @@ O projeto foi construído com uma stack moderna focada em escalabilidade e produ
 
 1. **Clone o repositório:**
    ```bash
-   git clone [https://github.com/SEU_USUARIO/planejadin.git](https://github.com/SEU_USUARIO/planejadin.git)
+   git clone [https://github.com/SEU_USUARIO/GerenciaDin.git](https://github.com/SEU_USUARIO/GerenciaDin.git)
 
 2. **Instale as dependências**
-   cd planejadin
+   cd GerenciaDin
    npm install
 
 3. **Configure as Variáveis de Ambiente: Crie um arquivo .env na raiz do projeto e adicione suas credenciais do Supabase:**

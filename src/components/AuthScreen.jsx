@@ -174,7 +174,7 @@ const AuthScreen = ({ onLogin }) => {
       
       {/* LADO ESQUERDO */}
       <div className="hidden lg:flex w-2/3 h-full bg-teal-900 items-center justify-center relative">
-        <img src={loginBgImage} alt="Banner PlanejaDin" className="w-full h-full object-cover object-left" />
+        <img src={loginBgImage} alt="Banner GerenciaDin" className="w-full h-full object-cover object-left" />
       </div>
 
       {/* LADO DIREITO */}
@@ -279,7 +279,7 @@ const AuthScreen = ({ onLogin }) => {
               </div>
             </>
           )}
-          <div className="text-center text-[9px] text-gray-300 dark:text-gray-600 mt-4">© 2025 PlanejaDin. Todos os direitos reservados.</div>
+          <div className="text-center text-[9px] text-gray-300 dark:text-gray-600 mt-4">© 2025 GerenciaDin. Todos os direitos reservados.</div>
         </div>
       </div>
     </div>
