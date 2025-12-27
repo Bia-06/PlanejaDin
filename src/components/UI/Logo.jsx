@@ -23,7 +23,7 @@ const Logo = ({
       {showSlogan && (
         <div className={`w-full mt-3 ${sloganClass}`}>
           <p className="font-inter text-sm text-gray-600 dark:text-gray-300 italic text-center leading-tight">
-            Planeje hoje, tranquilidade amanhã
+            A forma inteligente de cuidar do seu dinheiro
           </p>
         </div>
       )}

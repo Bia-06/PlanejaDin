@@ -1,5 +1,5 @@
 # GerenciaDin 💸
-> **Planeje hoje, tranquilidade amanhã.**
+> **A forma inteligente de cuidar do seu dinheiro.**
 
 O **GerenciaDin** é uma aplicação web completa para gestão financeira pessoal. O objetivo é simplificar o controle de receitas e despesas através de uma interface moderna, intuitiva e responsiva.
 
@@ -37,7 +37,7 @@ O projeto foi construído com uma stack moderna focada em escalabilidade e produ
    ```bash
    git clone [https://github.com/SEU_USUARIO/GerenciaDin.git](https://github.com/SEU_USUARIO/GerenciaDin.git)
 
-2. **Instale as dependências**
+2. **Instale as dependências:**
    cd GerenciaDin
    npm install
 
@@ -45,5 +45,5 @@ O projeto foi construído com uma stack moderna focada em escalabilidade e produ
    VITE_SUPABASE_URL=sua_url_do_supabase
    VITE_SUPABASE_ANON_KEY=sua_chave_anon_do_supabase
 
-4. **Inicie o servidor de desenvolvimento**
+4. **Inicie o servidor de desenvolvimento:**
    npm run dev
