@@ -8,10 +8,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        mint: '#00D68F',  // Sua cor mint
-        teal: '#0F172A',  // Sua cor teal
-        yellow: '#FBBF24', // Sua cor yellow
-        bgLight: '#F8FAFC', // Sua cor bgLight
+        mint: '#00D68F',  
+        teal: '#0F172A',  
+        yellow: '#FBBF24',
+        bgLight: '#F8FAFC', 
       },
       fontFamily: {
         poppins: ['Poppins', 'sans-serif'],

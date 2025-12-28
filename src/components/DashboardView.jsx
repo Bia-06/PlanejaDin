@@ -13,8 +13,8 @@ const DashboardView = ({
   setView
 }) => {
   return (
-    <div className="animate-fadeIn font-inter max-h-[calc(100vh-120px)]">
-      {/* Header compacto com tema e agenda */}
+    <div className="animate-fadeIn font-inter pb-32 md:pb-0 md:max-h-[calc(100vh-120px)]">
+
       <div className="flex justify-between items-start mb-6 gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-teal dark:text-white font-poppins">
@@ -25,7 +25,6 @@ const DashboardView = ({
           </p>
         </div>
         
-        {/* Botões do canto superior direito */}
         <div className="flex items-center gap-2">
           <button 
             onClick={() => setView('calendar')}
@@ -54,9 +53,7 @@ const DashboardView = ({
         </div>
       </div>
 
-      {/* Grid Principal */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        {/* Coluna 1: Saldo Total */}
         <div className="lg:col-span-1">
           <div className="bg-gradient-to-r from-mint to-teal rounded-xl p-6 text-white shadow-lg h-full">
             <div className="flex flex-col h-full">
@@ -80,7 +77,6 @@ const DashboardView = ({
           </div>
         </div>
 
-        {/* Coluna 2: Receitas e Despesas */}
         <div className="lg:col-span-1 grid grid-cols-2 gap-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 flex flex-col">
             <div className="flex items-center justify-between mb-4">
@@ -119,7 +115,6 @@ const DashboardView = ({
           </div>
         </div>
 
-        {/* Coluna 3: Distribuição de Gastos */}
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 h-full">
             <div className="flex items-center justify-between mb-4">
@@ -153,7 +148,6 @@ const DashboardView = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        {/* Contas Pendentes */}
         <div className="lg:col-span-2">
           {summary.pendingBills > 0 ? (
             <div className="h-full bg-amber-50 dark:bg-amber-900/20 rounded-xl p-5 border border-amber-200 dark:border-amber-700/50 flex flex-col justify-center relative overflow-hidden group">
@@ -184,7 +178,6 @@ const DashboardView = ({
           )}
         </div>
 
-        {/* Lembretes Rápidos - TRAVADO h-[200px] */}
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 h-[200px] flex flex-col">
             <div className="flex items-center justify-between mb-4">
@@ -202,8 +195,8 @@ const DashboardView = ({
                         <div className="flex-1 truncate">
                           <p className="font-medium text-teal dark:text-white text-sm truncate">{reminder.title}</p>
                           <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-bold">
-  {new Date(reminder.date + 'T12:00:00').toLocaleDateString('pt-BR')}
-</p>
+                            {new Date(reminder.date + 'T12:00:00').toLocaleDateString('pt-BR')}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -224,7 +217,6 @@ const DashboardView = ({
         </div>
       </div>
 
-      {/* Ações Rápidas */}
       <div className="mt-4">
         <h3 className="font-bold text-lg text-teal dark:text-white mb-3 font-poppins">Ações Rápidas</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

@@ -86,18 +86,18 @@ const TransactionsView = ({
             const isOverdue = item.status === 'pending' && item.date < today;
             
             return (
-              <div key={item.id} className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 flex items-center justify-between group transition-all hover:-translate-y-1">
-                <div className="flex items-center gap-5">
-                  <div className={`p-4 rounded-2xl flex items-center justify-center ${item.type === 'income' ? 'bg-mint/10 text-mint' : 'bg-red-50 dark:bg-red-900/20 text-red-500'}`}>
+              <div key={item.id} className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 flex flex-col md:flex-row md:items-center justify-between group transition-all hover:-translate-y-1 gap-4 md:gap-0">
+                
+                <div className="flex items-center gap-4 md:gap-5 w-full md:w-auto">
+                  <div className={`p-4 rounded-2xl flex items-center justify-center shrink-0 ${item.type === 'income' ? 'bg-mint/10 text-mint' : 'bg-red-50 dark:bg-red-900/20 text-red-500'}`}>
                     {item.type === 'income' ? <ArrowUp className="w-6 h-6" /> : <ArrowDown className="w-6 h-6" />}
                   </div>
-                  <div>
-                    <p className="font-bold text-teal dark:text-white text-lg">{item.description}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-0.5 flex items-center gap-2">
+                  <div className="min-w-0"> 
+                    <p className="font-bold text-teal dark:text-white text-lg truncate pr-2">{item.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-0.5 flex flex-wrap items-center gap-2">
                       <span className={isOverdue ? "text-red-500 font-bold" : ""}>{formatDate(item.date)}</span>
                       <span className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs">{item.category}</span>
                       
-                      {/* CORREÇÃO: Cores Amarelas (Amber) e Vermelhas restauradas */}
                       {item.status === 'pending' && !isOverdue && (
                         <span className="flex items-center gap-1 text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-800">
                           <Clock className="w-3 h-3" /> Pendente
@@ -119,13 +119,12 @@ const TransactionsView = ({
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center w-full md:w-auto pt-3 md:pt-0 border-t border-gray-100 dark:border-gray-700 md:border-t-0">
                   <span className={`font-bold text-lg font-inter ${item.type === 'income' ? 'text-mint' : 'text-teal dark:text-white'}`}>
                     {item.type === 'expense' ? '-' : '+'} {formatCurrency(item.amount)}
                   </span>
                   
-                  <div className="flex items-center gap-2">
-                    {/* CORREÇÃO: Ícones adicionados ao botão da direita */}
+                  <div className="flex items-center gap-2 mt-0 md:mt-2">
                     <button 
                       onClick={() => handleToggleStatus(item)} 
                       className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition-colors border ${

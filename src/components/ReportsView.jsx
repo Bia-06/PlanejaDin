@@ -15,17 +15,11 @@ const ReportsView = ({ transactions = [] }) => {
   const [timeRange, setTimeRange] = useState('6months');
   const [chartType, setChartType] = useState('composed');
 
-  // --- PROCESSAMENTO DE DADOS REAIS ---
-
-  // 1. Processar Evolução (Receita x Despesa x Lucro por Mês)
   const evolutionData = useMemo(() => {
     const grouped = {};
     
-    // Agrupa transações por mês (YYYY-MM)
     transactions.forEach(t => {
-      // Ajuste de data para evitar problema de fuso horário
       const dateObj = new Date(t.date + 'T12:00:00');
-      // Cria chave YYYY-MM
       const key = dateObj.toISOString().slice(0, 7); 
       
       if (!grouped[key]) {
@@ -39,17 +33,13 @@ const ReportsView = ({ transactions = [] }) => {
       }
     });
 
-    // Calcula Lucro e transforma em array
     let data = Object.values(grouped).map(item => ({
       ...item,
       Lucro: item.Receitas - item.Despesas
     }));
 
-    // Ordena por data
     data.sort((a, b) => a.date - b.date);
 
-    // Filtra pelo TimeRange
-    const now = new Date();
     if (timeRange === '3months') {
       data = data.slice(-3);
     } else if (timeRange === '6months') {
@@ -57,12 +47,10 @@ const ReportsView = ({ transactions = [] }) => {
     } else if (timeRange === '1year') {
       data = data.slice(-12);
     }
-    // 'all' não faz slice
 
     return data;
   }, [transactions, timeRange]);
 
-  // 2. Processar Categorias (Apenas Despesas)
   const categoryData = useMemo(() => {
     const expenses = transactions.filter(t => t.type === 'expense');
     const grouped = {};
@@ -73,23 +61,20 @@ const ReportsView = ({ transactions = [] }) => {
       grouped[cat] += Number(t.amount);
     });
 
-    // Transforma em array e ordena do maior para o menor
     return Object.entries(grouped)
       .map(([name, value], index) => ({
         name,
         value,
-        color: CHART_COLORS[index % CHART_COLORS.length] // Usa cores cíclicas
+        color: CHART_COLORS[index % CHART_COLORS.length] 
       }))
       .sort((a, b) => b.value - a.value);
   }, [transactions]);
 
-  // 3. Comparativo Mensal (Ano Atual vs Ano Anterior)
   const monthlyComparison = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const lastYear = currentYear - 1;
     const groupedByMonth = {};
 
-    // Inicializa os meses
     const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     monthNames.forEach((m, i) => {
       groupedByMonth[i] = { month: m, atual: 0, anterior: 0, economia: 0 };
@@ -100,32 +85,23 @@ const ReportsView = ({ transactions = [] }) => {
       const year = date.getFullYear();
       const monthIndex = date.getMonth();
 
-      // Consideramos "Gastos" para comparação de economia/gastos ou "Receita"?
-      // Geralmente comparativo financeiro foca em SALDO ou RECEITA. 
-      // Vamos usar RECEITA (Income) como base para "Atual" vs "Anterior" no exemplo visual original, 
-      // mas se quiser comparar Gastos, basta trocar para t.type === 'expense'
       if (t.type === 'income') { 
         if (year === currentYear) groupedByMonth[monthIndex].atual += Number(t.amount);
         if (year === lastYear) groupedByMonth[monthIndex].anterior += Number(t.amount);
       }
     });
 
-    // Calcula economia (diferença) e retorna array
     return Object.values(groupedByMonth).map(item => ({
       ...item,
-      economia: item.atual - item.anterior // Diferença simples
-    })).filter(item => item.atual > 0 || item.anterior > 0); // Mostra apenas meses com movimento
+      economia: item.atual - item.anterior 
+    })).filter(item => item.atual > 0 || item.anterior > 0); 
   }, [transactions]);
 
-  // Totais Gerais baseados no filtro de evolução
   const totalIncome = evolutionData.reduce((sum, m) => sum + m.Receitas, 0);
   const totalProfit = evolutionData.reduce((sum, m) => sum + m.Lucro, 0);
   const totalExpensesCat = categoryData.reduce((sum, c) => sum + c.value, 0);
   
-  // Evita divisão por zero
   const savingsRate = totalIncome > 0 ? ((totalProfit / totalIncome) * 100).toFixed(1) : '0.0';
-
-  // --- COMPONENTES VISUAIS (MANTIDOS IGUAIS) ---
 
   const CustomBarTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -170,7 +146,6 @@ const ReportsView = ({ transactions = [] }) => {
     alert('Funcionalidade de exportação será implementada em breve!');
   };
 
-  // Se não houver dados, mostra estado vazio elegante
   if (transactions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 animate-fadeIn text-center">
@@ -187,7 +162,6 @@ const ReportsView = ({ transactions = [] }) => {
 
   return (
     <div className="animate-fadeIn pb-24 font-inter">
-      {/* Cabeçalho com controles */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h2 className="text-2xl font-bold text-teal dark:text-white font-poppins">Relatórios de Crescimento</h2>
@@ -218,77 +192,74 @@ const ReportsView = ({ transactions = [] }) => {
           </Button>
         </div>
       </div>
-      
-      {/* Cards de estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Receitas Totais</p>
-              <p className="text-1 font-bold text-mint">{formatCurrency(totalIncome)}</p>
+            <div className="min-w-0">
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Receitas Totais</p>
+              <p className="text-1 font-bold text-mint truncate">{formatCurrency(totalIncome)}</p>
             </div>
-            <div className="p-3 bg-mint/10 rounded-full">
-              <TrendingUp className="w-6 h-6 text-mint" />
+            <div className="p-2 md:p-3 bg-mint/10 rounded-full shrink-0">
+              <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-mint" />
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Período selecionado</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">Período selecionado</p>
         </Card>
         
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Taxa de Economia</p>
-              <p className="text-1 font-bold" style={{ color: '#60A5FA' }}>{savingsRate}%</p>
+            <div className="min-w-0">
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Taxa Economia</p>
+              <p className="text-1 font-bold truncate" style={{ color: '#60A5FA' }}>{savingsRate}%</p>
             </div>
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-full">
-              <PieChartIcon className="w-6 h-6" style={{ color: '#60A5FA' }} />
+            <div className="p-2 md:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-full shrink-0">
+              <PieChartIcon className="w-5 h-5 md:w-6 md:h-6" style={{ color: '#60A5FA' }} />
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Da sua renda</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">Da sua renda</p>
         </Card>
         
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Lucro Acumulado</p>
-              <p className="text-1 font-bold text-yellow">{formatCurrency(totalProfit)}</p>
+            <div className="min-w-0">
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Lucro Acumulado</p>
+              <p className="text-1 font-bold text-yellow truncate">{formatCurrency(totalProfit)}</p>
             </div>
-            <div className="p-3 bg-yellow/10 rounded-full">
-              <TrendingUp className="w-6 h-6 text-yellow" />
+            <div className="p-2 md:p-3 bg-yellow/10 rounded-full shrink-0">
+              <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-yellow" />
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Saldo positivo</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">Saldo positivo</p>
         </Card>
         
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Categorias</p>
-              <p className="text-l font-bold text-purple-500">{categoryData.length}</p>
+            <div className="min-w-0">
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Categorias</p>
+              <p className="text-l font-bold text-purple-500 truncate">{categoryData.length}</p>
             </div>
-            <div className="p-3 bg-purple-500/10 rounded-full">
-              <span className="text-purple-500 font-bold text-xl">{categoryData.length}</span>
+            <div className="p-2 md:p-3 bg-purple-500/10 rounded-full shrink-0">
+              <span className="text-purple-500 font-bold text-lg md:text-xl">{categoryData.length}</span>
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">Com gastos registrados</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">Ativas</p>
         </Card>
       </div>
 
-      {/* Gráficos principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Gráfico de Composição */}
         <Card className="lg:col-span-2">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-teal dark:text-white">Fluxo de Caixa Mensal</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">Receitas vs Despesas vs Lucro</p>
             </div>
-            <div className="flex gap-2 mt-2 md:mt-0">
+            <div className="flex gap-2 mt-2 md:mt-0 overflow-x-auto pb-1 md:pb-0">
               {['composed', 'area', 'bar'].map(type => (
                 <button
                   key={type}
                   onClick={() => setChartType(type)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                     chartType === type
                     ? 'bg-mint text-white'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -300,7 +271,7 @@ const ReportsView = ({ transactions = [] }) => {
             </div>
           </div>
           
-          <div className="h-[350px]">
+          <div className="h-[300px] md:h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               {chartType === 'composed' ? (
                 <ComposedChart data={evolutionData}>
@@ -316,6 +287,7 @@ const ReportsView = ({ transactions = [] }) => {
                     tickLine={false}
                     tick={{ fill: '#94a3b8', fontSize: 12 }}
                     tickFormatter={(value) => `R$${value/1000}k`}
+                    width={40} 
                   />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Legend />
@@ -357,7 +329,7 @@ const ReportsView = ({ transactions = [] }) => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
                   <XAxis dataKey="name" tick={{ fill: '#94a3b8' }} />
-                  <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{ fill: '#94a3b8' }} />
+                  <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{ fill: '#94a3b8' }} width={40} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Area 
                     type="monotone" 
@@ -378,7 +350,7 @@ const ReportsView = ({ transactions = [] }) => {
                 <BarChart data={evolutionData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
                   <XAxis dataKey="name" tick={{ fill: '#94a3b8' }} />
-                  <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{ fill: '#94a3b8' }} />
+                  <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{ fill: '#94a3b8' }} width={40} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Legend />
                   <Bar dataKey="Receitas" fill={THEME.mint} radius={[6, 6, 0, 0]} />
@@ -389,7 +361,6 @@ const ReportsView = ({ transactions = [] }) => {
           </div>
         </Card>
 
-        {/* Gráfico de Pizza */}
         <Card>
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -402,15 +373,15 @@ const ReportsView = ({ transactions = [] }) => {
             </div>
           </div>
           
-          <div className="h-[380px]">
+          <div className="h-[300px] md:h-[380px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                 <Pie
                   data={categoryData}
                   cx="50%"
                   cy="51%"
-                  innerRadius={70}
-                  outerRadius={100}
+                  innerRadius={60}
+                  outerRadius={90} 
                   paddingAngle={3}
                   dataKey="value"
                   label={(entry) => `${entry.name}`}
@@ -430,7 +401,7 @@ const ReportsView = ({ transactions = [] }) => {
                   verticalAlign="bottom"
                   align="center"
                   iconType="circle"
-                  wrapperStyle={{ paddingBottom: '0px' }} 
+                  wrapperStyle={{ paddingBottom: '0px', fontSize: '12px' }} 
                   formatter={(value) => (
                     <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">
                       {value}
@@ -442,14 +413,13 @@ const ReportsView = ({ transactions = [] }) => {
           </div>
         </Card>
 
-        {/* Gráfico de Área - Evolução de Lucro */}
         <Card>
           <div className="mb-6">
             <h3 className="text-lg font-bold text-teal dark:text-white">Evolução do Lucro</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">Margem mensal</p>
           </div>
           
-          <div className="h-[300px]">
+          <div className="h-[250px] md:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={evolutionData}>
                 <defs>
@@ -469,6 +439,7 @@ const ReportsView = ({ transactions = [] }) => {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  width={40}
                 />
                 <Tooltip 
                   formatter={(value) => [formatCurrency(value), 'Lucro']}
@@ -500,9 +471,8 @@ const ReportsView = ({ transactions = [] }) => {
         </Card>
       </div>
 
-      {/* Tabela de Comparativo */}
       <Card>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-2">
           <h3 className="text-lg font-bold text-teal dark:text-white">Comparativo de Receitas (Ano a Ano)</h3>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
@@ -515,16 +485,16 @@ const ReportsView = ({ transactions = [] }) => {
             </div>
           </div>
         </div>
-        
+
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-100 dark:border-gray-700">
-                <th className="text-left py-3 text-gray-500 dark:text-gray-400 font-medium">Mês</th>
-                <th className="text-left py-3 text-gray-500 dark:text-gray-400 font-medium">Este Ano</th>
-                <th className="text-left py-3 text-gray-500 dark:text-gray-400 font-medium">Ano Passado</th>
-                <th className="text-left py-3 text-gray-500 dark:text-gray-400 font-medium">Diferença</th>
-                <th className="text-left py-3 text-gray-500 dark:text-gray-400 font-medium">Variação</th>
+                <th className="text-left py-3 pr-4 text-gray-500 dark:text-gray-400 font-medium">Mês</th>
+                <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Este Ano</th>
+                <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Ano Passado</th>
+                <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Diferença</th>
+                <th className="text-left py-3 pl-4 text-gray-500 dark:text-gray-400 font-medium">Variação</th>
               </tr>
             </thead>
             <tbody>
@@ -534,17 +504,17 @@ const ReportsView = ({ transactions = [] }) => {
                 
                 return (
                   <tr key={item.month} className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                    <td className="py-4 font-medium text-teal dark:text-white">{item.month}</td>
-                    <td className="py-4 font-bold text-teal dark:text-white">
+                    <td className="py-4 pr-4 font-medium text-teal dark:text-white">{item.month}</td>
+                    <td className="py-4 px-4 font-bold text-teal dark:text-white">
                       {formatCurrency(item.atual)}
                     </td>
-                    <td className="py-4 text-gray-600 dark:text-gray-400">
+                    <td className="py-4 px-4 text-gray-600 dark:text-gray-400">
                       {formatCurrency(item.anterior)}
                     </td>
-                    <td className="py-4 font-bold text-mint">
+                    <td className="py-4 px-4 font-bold text-mint">
                       {formatCurrency(item.economia)}
                     </td>
-                    <td className="py-4">
+                    <td className="py-4 pl-4">
                       <div className="flex items-center gap-2">
                         <span className={`font-bold ${isPositive ? 'text-mint' : 'text-red-500'}`}>
                           {isPositive ? '+' : ''}{variation.toFixed(1)}%

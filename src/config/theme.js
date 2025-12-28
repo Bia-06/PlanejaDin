@@ -21,8 +21,7 @@ export const theme = {
       border: '#334155',
     },
   },
-  
-  // Classes utilitárias
+ 
   classes: {
     text: {
       heading: 'text-teal dark:text-white',

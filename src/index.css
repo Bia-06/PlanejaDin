@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Remova todas as definições de cores manuais - o Tailwind já tem */
-/* Remova as animações manuais - o Tailwind config já tem */
-
-/* Apenas scrollbar personalizada pode ficar */
 ::-webkit-scrollbar {
   width: 8px;
 }

@@ -1,16 +1,14 @@
-// Paleta "Prosperidade Fresca"
 export const THEME = {
-  mint: '#00D48F',     // Principal / Ação
-  teal: '#0E3A47',     // Secundária / Base
-  tealDark: '#06252e', // Variação mais escura para degradê
-  yellow: '#FFC800',   // Acento / Alerta
+  mint: '#00D48F',     
+  teal: '#0E3A47',     
+  tealDark: '#06252e', 
+  yellow: '#FFC800',   
   white: '#FFFFFF',
-  bgLight: '#F4F6F8',  // Fundo Geral
-  textDark: '#0E3A47', // Texto Principal
-  textLight: '#64748B' // Texto Secundário
+  bgLight: '#F4F6F8',  
+  textDark: '#0E3A47', 
+  textLight: '#64748B' 
 };
 
-// Cores para gráficos adaptadas à paleta
 export const CHART_COLORS = [
   THEME.mint, 
   THEME.teal, 

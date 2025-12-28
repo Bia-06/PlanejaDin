@@ -213,7 +213,6 @@ const SettingsView = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* CARD DE PERFIL (Esquerda) */}
         <Card>
           <div className="flex flex-col items-center mb-8">
             <div 
@@ -233,9 +232,11 @@ const SettingsView = ({
                   </div>
                 )}
               </div>
-              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera className="text-white w-8 h-8" />
+              
+              <div className="absolute bottom-0 right-0 p-2.5 bg-teal rounded-full border-4 border-white dark:border-gray-800 shadow-sm z-10">
+                <Camera className="text-white w-5 h-5" />
               </div>
+              
               <input 
                 type="file" 
                 ref={fileInputRef} 
@@ -245,7 +246,7 @@ const SettingsView = ({
               />
             </div>
             <h3 className="font-bold text-xl text-teal dark:text-white font-poppins">{formData.name || 'Usuário'}</h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">Editar perfil</p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">Toque na foto para editar</p>
           </div>
 
           <div className="space-y-1">
@@ -274,7 +275,6 @@ const SettingsView = ({
                 </div>
               </div>
 
-              {/* MUDANÇA: Senhas uma embaixo da outra para alinhar altura */}
               <div>
                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Nova Senha</label>
                  <div className="relative">
@@ -309,9 +309,9 @@ const SettingsView = ({
                   )}
                   {formData.password.length > 0 && (
                     <div className="text-xs space-y-1.5">
-                       <div className={`flex items-center gap-1.5 ${passwordRequirements.length ? 'text-green-600' : 'text-red-600'}`}><div className={`w-2 h-2 rounded-full ${passwordRequirements.length ? 'bg-green-500' : 'bg-red-500'}`}></div> 8+ caracteres</div>
-                       <div className={`flex items-center gap-1.5 ${passwordRequirements.uppercase ? 'text-green-600' : 'text-red-600'}`}><div className={`w-2 h-2 rounded-full ${passwordRequirements.uppercase ? 'bg-green-500' : 'bg-red-500'}`}></div> Maiúscula</div>
-                       <div className={`flex items-center gap-1.5 ${passwordRequirements.specialChar ? 'text-green-600' : 'text-red-600'}`}><div className={`w-2 h-2 rounded-full ${passwordRequirements.specialChar ? 'bg-green-500' : 'bg-red-500'}`}></div> Especial</div>
+                        <div className={`flex items-center gap-1.5 ${passwordRequirements.length ? 'text-green-600' : 'text-red-600'}`}><div className={`w-2 h-2 rounded-full ${passwordRequirements.length ? 'bg-green-500' : 'bg-red-500'}`}></div> 8+ caracteres</div>
+                        <div className={`flex items-center gap-1.5 ${passwordRequirements.uppercase ? 'text-green-600' : 'text-red-600'}`}><div className={`w-2 h-2 rounded-full ${passwordRequirements.uppercase ? 'bg-green-500' : 'bg-red-500'}`}></div> Maiúscula</div>
+                        <div className={`flex items-center gap-1.5 ${passwordRequirements.specialChar ? 'text-green-600' : 'text-red-600'}`}><div className={`w-2 h-2 rounded-full ${passwordRequirements.specialChar ? 'bg-green-500' : 'bg-red-500'}`}></div> Especial</div>
                     </div>
                   )}
                 </div>
@@ -326,21 +326,20 @@ const SettingsView = ({
           </div>
         </Card>
 
-        {/* COLUNA DIREITA */}
         <div className="space-y-6">
           <Card>
             <h3 className="font-bold text-lg text-teal dark:text-white mb-4 flex items-center gap-2 font-poppins">
               <Tag className="w-5 h-5 text-mint" /> Categorias
             </h3>
             <div className="flex gap-2 mb-4">
-              <input className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-teal dark:text-white text-sm outline-none focus:ring-2 focus:ring-mint transition-all" placeholder="Nova Categoria..." value={newCategory} onChange={(e) => setNewCategory(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()} />
-              <button onClick={handleAddCategory} className="bg-mint text-white p-2 rounded-xl hover:bg-[#00b57a] transition-colors"><Plus size={20}/></button>
+              <input className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-teal dark:text-white text-sm outline-none focus:ring-2 focus:ring-mint transition-all min-w-0" placeholder="Nova Categoria..." value={newCategory} onChange={(e) => setNewCategory(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()} />
+              <button onClick={handleAddCategory} className="bg-mint text-white p-2 rounded-xl hover:bg-[#00b57a] transition-colors shrink-0"><Plus size={20}/></button>
             </div>
             <div className="max-h-[200px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
               {categories.map(cat => (
                 <div key={cat.id} className="flex justify-between items-center p-3 bg-bgLight dark:bg-gray-700/50 rounded-xl group hover:bg-white dark:hover:bg-gray-700 border border-transparent hover:border-gray-100 dark:hover:border-gray-600 transition-all">
-                  <span className="text-sm font-medium text-teal dark:text-gray-300">{cat.name}</span>
-                  <button onClick={() => deleteCategory(cat.id)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} /></button>
+                  <span className="text-sm font-medium text-teal dark:text-gray-300 truncate">{cat.name}</span>
+                  <button onClick={() => deleteCategory(cat.id)} className="text-gray-400 hover:text-red-500 transition-colors"><X size={16} /></button>
                 </div>
               ))}
             </div>
@@ -348,14 +347,17 @@ const SettingsView = ({
 
           <Card>
             <h3 className="font-bold text-lg text-teal dark:text-white mb-4 font-poppins">Preferências</h3>
-            <div className="flex items-center justify-between p-4 bg-bgLight dark:bg-gray-700/50 rounded-xl mb-4">
+            <div 
+                className="flex items-center justify-between p-4 bg-bgLight dark:bg-gray-700/50 rounded-xl mb-4 cursor-pointer active:scale-[0.98] transition-transform" 
+                onClick={() => setIsDarkMode(!isDarkMode)}
+            >
               <div className="flex items-center gap-3">
                 {isDarkMode ? <Moon className="text-teal dark:text-white w-5 h-5" /> : <Sun className="text-yellow w-5 h-5" />}
                 <span className="text-teal font-medium dark:text-gray-200">Modo Escuro</span>
               </div>
-              <button onClick={() => setIsDarkMode(!isDarkMode)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isDarkMode ? 'bg-mint' : 'bg-gray-300'}`}>
+              <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isDarkMode ? 'bg-mint' : 'bg-gray-300'}`}>
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition transition-transform ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
+              </div>
             </div>
             
             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
@@ -380,9 +382,8 @@ const SettingsView = ({
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.0.0 (Beta)</span></p>
-               <p className="flex justify-between"><span>Última Atualização:</span><span>26 Dez 2025</span></p>
+               <p className="flex justify-between"><span>Última Atualização:</span><span>28 Dez 2025</span></p>
               <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400">
-                {/* MUDANÇA: Link adicionado aqui */}
                 Feito com 💜 por <a href="https://portfolio--beatriz.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-mint font-bold hover:underline transition-all">Beatriz Pires</a>
               </div>
             </div>

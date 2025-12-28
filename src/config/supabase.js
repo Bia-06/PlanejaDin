@@ -5,9 +5,6 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// --- FUNÇÕES DE AUTENTICAÇÃO ---
-
-// Função que o seu erro reclamou (getCurrentUser)
 export const getCurrentUser = async () => {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error) return null;

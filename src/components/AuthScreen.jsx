@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { 
   AlertCircle, Mail, Lock, User, ArrowRight, Eye, EyeOff, KeyRound, ArrowLeft 
 } from 'lucide-react';
-import { supabase, signInWithEmail, signUpWithEmail } from '../config/supabase'; // Importe supabase aqui também
+import { supabase, signInWithEmail, signUpWithEmail } from '../config/supabase';
 import Input from './UI/Input';
 import Button from './UI/Button';
 import Logo from './UI/Logo';
-
 import loginBgImage from '../assets/login-bg.png'; 
 
 const AuthScreen = ({ onLogin }) => {
-  // Estados de visualização: 'login', 'signup', 'recovery'
   const [view, setView] = useState('login'); 
   const [isSuccess, setIsSuccess] = useState(false);
   const [recoverySent, setRecoverySent] = useState(false);
@@ -26,7 +24,6 @@ const AuthScreen = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Validação de senha
   const validatePasswordStrength = (pass) => {
     const hasUpperCase = /[A-Z]/.test(pass);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
@@ -38,7 +35,6 @@ const AuthScreen = ({ onLogin }) => {
     return null;
   };
 
-  // Resetar formulários ao trocar de tela
   const switchView = (newView) => {
     setView(newView);
     setError('');
@@ -48,7 +44,6 @@ const AuthScreen = ({ onLogin }) => {
     setIsSuccess(false);
   };
 
-  // Função para lidar com "Esqueceu a Senha"
   const handlePasswordRecovery = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -56,7 +51,7 @@ const AuthScreen = ({ onLogin }) => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin, // Redireciona para o site após clicar no email
+        redirectTo: window.location.origin, 
       });
 
       if (error) throw error;
@@ -68,7 +63,6 @@ const AuthScreen = ({ onLogin }) => {
     }
   };
 
-  // Função principal de Login/Cadastro
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -106,11 +100,10 @@ const AuthScreen = ({ onLogin }) => {
 
   const inputStyle = { paddingLeft: '2.5rem' }; 
 
-  // --- Renderização da Tela de Recuperação ---
   if (view === 'recovery') {
     return (
-      <div className="h-screen flex w-full font-inter bg-white dark:bg-gray-900 overflow-hidden items-center justify-center p-6">
-        <div className="w-full max-w-sm bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xl rounded-2xl p-8">
+      <div className="h-[100dvh] flex w-full font-inter bg-white dark:bg-gray-900 items-center justify-center p-6 overflow-y-auto">
+        <div className="w-full max-w-sm bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xl rounded-2xl p-8 my-auto">
           <div className="text-center mb-6">
             <div className="flex justify-center mb-4">
               <div className="bg-mint/10 p-3 rounded-full">
@@ -168,18 +161,16 @@ const AuthScreen = ({ onLogin }) => {
     );
   }
 
-  // --- Renderização Padrão (Login / Cadastro) ---
   return (
-    <div className="h-screen flex w-full font-inter bg-white dark:bg-gray-900 overflow-hidden">
+    <div className="h-[100dvh] flex w-full font-inter bg-white dark:bg-gray-900 overflow-hidden">
       
-      {/* LADO ESQUERDO */}
       <div className="hidden lg:flex w-2/3 h-full bg-teal-900 items-center justify-center relative">
         <img src={loginBgImage} alt="Banner GerenciaDin" className="w-full h-full object-cover object-left" />
       </div>
 
-      {/* LADO DIREITO */}
-      <div className="w-full lg:w-1/3 h-full flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-900 border-l border-gray-100 dark:border-gray-800 shadow-xl z-10">
-        <div className="w-full max-w-sm flex flex-col justify-center h-full max-h-[800px]"> 
+      <div className="w-full lg:w-1/3 h-full flex flex-col items-center justify-center bg-white dark:bg-gray-900 border-l border-gray-100 dark:border-gray-800 shadow-xl z-10 overflow-y-auto">
+        
+        <div className="w-full max-w-sm flex flex-col justify-center min-h-min p-6 my-auto"> 
           
           {isSuccess ? (
             <div className="text-center animate-fadeIn">
@@ -197,7 +188,11 @@ const AuthScreen = ({ onLogin }) => {
           ) : (
             <>
               <div className="text-center lg:text-left mb-6">
-                <div className="lg:hidden flex justify-center mb-4"><Logo size="medium" /></div>
+                
+                <div className="lg:hidden flex w-full justify-center items-center mb-6">
+                  <Logo size="medium" centered={true} className="mx-auto" />
+                </div>
+
                 <h2 className="text-xl font-bold text-teal dark:text-white font-poppins">
                   {view === 'login' ? 'Bem-vindo de volta!' : 'Crie sua conta grátis'}
                 </h2>
@@ -279,7 +274,7 @@ const AuthScreen = ({ onLogin }) => {
               </div>
             </>
           )}
-          <div className="text-center text-[9px] text-gray-300 dark:text-gray-600 mt-4">© 2025 GerenciaDin. Todos os direitos reservados.</div>
+          <div className="text-center text-[9px] text-gray-300 dark:text-gray-600 mt-4 pb-4 lg:pb-0">© 2025 GerenciaDin. Todos os direitos reservados.</div>
         </div>
       </div>
     </div>

@@ -11,8 +11,8 @@ const Input = ({
   min, 
   max, 
   disabled,
-  className = "", // NOVO: aceita classes adicionais
-  style = {} // NOVO: aceita estilos inline
+  className = "", 
+  style = {} 
 }) => (
   <div className="mb-4 font-inter">
     <label className="block text-sm font-semibold text-teal dark:text-gray-300 mb-2">{label}</label>

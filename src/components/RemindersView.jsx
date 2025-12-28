@@ -1,6 +1,5 @@
 import React from 'react';
-import { Bell, CalendarIcon, Plus } from 'lucide-react';
-import Card from './UI/Card';
+import { Bell, CalendarIcon, Plus, Trash2 } from 'lucide-react';
 import Button from './UI/Button';
 import { formatDate } from '../utils/formatters';
 
@@ -17,22 +16,34 @@ const RemindersView = ({ reminders = [], handleDelete, openModal }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {reminders.length === 0 ? (
           <div className="col-span-2 text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-700">
-            <Bell className="w-16 h-16 mx-auto mb-4 text-mint opacity-20" />
+            <div className="bg-mint/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Bell className="w-10 h-10 text-mint" />
+            </div>
             <h3 className="text-xl font-bold text-teal dark:text-white">Você está livre de lembretes!! 🎉</h3>
             <p className="text-gray-500 dark:text-gray-400 mt-2">Você não possui lembretes para os próximos dias.</p>
           </div>
         ) : (
           reminders.map(rem => (
-            <div key={rem.id} className="bg-white dark:bg-gray-800 p-6 rounded-2xl border-l-8 border-l-yellow shadow-sm flex justify-between items-start hover:shadow-md transition-shadow border border-t-gray-100 border-r-gray-100 border-b-gray-100 dark:border-gray-700">
-              <div>
-                <h3 className="font-bold text-teal dark:text-white text-xl mb-1">{rem.title}</h3>
+            <div key={rem.id} className="bg-white dark:bg-gray-800 p-6 rounded-2xl border-l-8 border-l-yellow shadow-sm flex justify-between items-start hover:shadow-md transition-shadow border border-t-gray-100 border-r-gray-100 border-b-gray-100 dark:border-gray-700 group">
+              
+              <div className="flex-1 min-w-0 pr-4">
+                <h3 className="font-bold text-teal dark:text-white text-xl mb-1 truncate">{rem.title}</h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm font-semibold flex items-center gap-1 mb-3">
                   <CalendarIcon className="w-4 h-4 text-mint"/> {formatDate(rem.date)}
                 </p>
-                {rem.details && <p className="text-gray-700 dark:text-gray-300 text-sm bg-bgLight dark:bg-gray-700 p-3 rounded-xl">{rem.details}</p>}
+                {rem.details && (
+                  <p className="text-gray-700 dark:text-gray-300 text-sm bg-bgLight dark:bg-gray-700 p-3 rounded-xl break-words">
+                    {rem.details}
+                  </p>
+                )}
               </div>
-              <button onClick={() => handleDelete('reminders', rem.id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                🗑️
+
+              <button 
+                onClick={() => handleDelete('reminders', rem.id)} 
+                className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
+                title="Excluir lembrete"
+              >
+                <Trash2 className="w-5 h-5" />
               </button>
             </div>
           ))

@@ -12,19 +12,16 @@ import Input from './components/UI/Input';
 import Select from './components/UI/Select';
 import Button from './components/UI/Button';
 import Logo from './components/UI/Logo';
-import Filters from './components/Filters';
+
 import { useTransactions } from './hooks/useTransactions';
 
 import { 
-  LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Plus, Sun, Moon, 
-  User, X, Save, Tag, Camera, LogOut, Search, ArrowUp, ArrowDown, CheckCircle, 
-  Clock, Trash2, Repeat, Layers, AlertCircle 
+  LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Repeat, Layers 
 } from 'lucide-react';
 
-import { DEFAULT_CATEGORIES } from './config/constants';
 import { 
-  formatCurrency, parseCommaValue, getLocalDateString, formatValueForInput, 
-  handleAmountInputChange, formatDate 
+  parseCommaValue, getLocalDateString, formatValueForInput, 
+  handleAmountInputChange 
 } from './utils/formatters';
 
 export default function App() {
@@ -86,6 +83,7 @@ export default function App() {
   const [form, setForm] = useState({
     description: '', amount: '', type: 'expense', category: 'Outros', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2
   });
+  
   const [formErrors, setFormErrors] = useState({});
   const [reminderForm, setReminderForm] = useState({ title: '', date: getLocalDateString(), details: '' });
   const [filters, setFilters] = useState({ type: 'all', category: 'all', status: 'all', startDate: '', endDate: '', minAmount: '', maxAmount: '' });
@@ -198,8 +196,18 @@ export default function App() {
     }
   };
 
+  // Itens do menu
+  const menuItems = [
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Visão Geral' },
+    { id: 'transactions', icon: List, label: 'Movimentações' },
+    { id: 'reports', icon: FileText, label: 'Relatórios' },
+    { id: 'reminders', icon: Bell, label: 'Lembretes' },
+    { id: 'calendar', icon: CalendarIcon, label: 'Calendário' },
+    { id: 'settings', icon: Settings, label: 'Configurações' }
+  ];
+
   return (
-    <div className={`min-h-screen transition-colors duration-300 font-inter ${isDarkMode ? 'dark bg-gray-900' : 'bg-bgLight'}`}>
+    <div className={`h-[100dvh] transition-colors duration-300 font-inter ${isDarkMode ? 'dark bg-gray-900' : 'bg-bgLight'}`}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap');
         .font-poppins { font-family: 'Poppins', sans-serif; }
@@ -208,23 +216,38 @@ export default function App() {
         .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
         .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
       `}</style>
-      <div className="flex flex-col md:flex-row h-screen overflow-hidden">
+      
+      <div className="flex flex-col md:flex-row h-full overflow-hidden">
         
-        {/* SIDEBAR */}
+        {/* --- MOBILE HEADER --- */}
+        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 shrink-0 z-20">
+            <Logo size="small" />
+            <div 
+              onClick={() => setView('settings')}
+              className="w-8 h-8 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border border-gray-200 dark:border-gray-600 cursor-pointer"
+            >
+                {user?.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="Perfil" className="w-full h-full object-cover" />
+                ) : (
+                  user?.email?.charAt(0).toUpperCase()
+                )}
+            </div>
+        </header>
+
+        {/* --- DESKTOP SIDEBAR --- */}
         <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm z-20">
           <div className="p-8 border-b border-gray-50 dark:border-gray-700">
             <Logo size="large" showSlogan={true} centered={true} className="mb-2" />
           </div>
           
           <nav className="flex-1 p-4 space-y-2 mt-4">
-            {[{ id: 'dashboard', icon: LayoutDashboard, label: 'Visão Geral' }, { id: 'transactions', icon: List, label: 'Movimentações' }, { id: 'reports', icon: FileText, label: 'Relatórios' }, { id: 'reminders', icon: Bell, label: 'Lembretes' }, { id: 'calendar', icon: CalendarIcon, label: 'Calendário' }, { id: 'settings', icon: Settings, label: 'Configurações' }].map(item => (
+            {menuItems.map(item => (
               <button key={item.id} onClick={() => setView(item.id)} className={`w-full flex items-center gap-4 px-4 py-4 rounded-xl transition-all font-medium ${view === item.id ? 'bg-mint/10 text-mint font-bold shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-teal'}`}>
                 <item.icon className="w-5 h-5" />{item.label}
               </button>
             ))}
           </nav>
 
-          {/* PERFIL DA BARRA LATERAL ALTERADO */}
           <div className="p-6 border-t border-gray-50 dark:border-gray-700">
             <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onClick={() => setView('settings')}>
               <div className="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border border-gray-200 dark:border-gray-600">
@@ -238,8 +261,6 @@ export default function App() {
                 <p className="text-sm font-bold text-teal dark:text-white truncate">
                   {user?.user_metadata?.name || 'Usuário'}
                 </p>
-                
-                {/* AQUI ESTÁ A MUDANÇA: PLANO GRATUITO */}
                 <p className="text-[10px] text-gray-500 truncate flex items-center gap-1.5 mt-0.5 font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-mint"></span>
                   Plano Gratuito
@@ -249,9 +270,38 @@ export default function App() {
           </div>
         </aside>
 
-        <main className="flex-1 overflow-y-auto relative bg-bgLight dark:bg-gray-900">
-          <div className="max-w-5xl mx-auto p-6 md:p-10">{renderView()}</div>
+        {/* --- MAIN CONTENT --- */}
+        <main className="flex-1 overflow-y-auto relative bg-bgLight dark:bg-gray-900 pb-24 md:pb-0">
+          <div className="max-w-5xl mx-auto p-4 md:p-10">{renderView()}</div>
         </main>
+
+        {/* --- MOBILE BOTTOM NAV --- */}
+        <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center px-2 py-3 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+           {menuItems.slice(0, 5).map(item => (
+              <button 
+                key={item.id} 
+                onClick={() => setView(item.id)} 
+                className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
+                  view === item.id 
+                    ? 'text-mint' 
+                    : 'text-gray-400 dark:text-gray-500 hover:text-teal dark:hover:text-gray-300'
+                }`}
+              >
+                <item.icon className={`w-6 h-6 ${view === item.id ? 'fill-current opacity-20' : ''}`} strokeWidth={view === item.id ? 2.5 : 2} />
+                <span className="text-[10px] font-medium mt-1">{item.label.split(' ')[0]}</span>
+              </button>
+           ))}
+           <button 
+                onClick={() => setView('settings')} 
+                className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
+                  view === 'settings' ? 'text-mint' : 'text-gray-400 dark:text-gray-500'
+                }`}
+              >
+                <Settings className="w-6 h-6" />
+                <span className="text-[10px] font-medium mt-1">Ajustes</span>
+           </button>
+        </nav>
+
       </div>
       
       {/* Modal */}

@@ -1,4 +1,4 @@
-# GerenciaDin 💸
+# GerenciaDin
 > **A forma inteligente de cuidar do seu dinheiro.**
 
 O **GerenciaDin** é uma aplicação web completa para gestão financeira pessoal. O objetivo é simplificar o controle de receitas e despesas através de uma interface moderna, intuitiva e responsiva.

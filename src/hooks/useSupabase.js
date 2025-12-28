@@ -1,4 +1,3 @@
-// useSupabase.js
 import { useState, useEffect } from 'react';
 import { supabase, getCurrentUser } from '../config/supabase';
 
@@ -34,12 +33,10 @@ export const useAuth = () => {
     };
   }, []);
 
-  // Adicionar a função signOut
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      // Não precisa setar user para null aqui, o onAuthStateChange cuidará disso
       return { success: true };
     } catch (error) {
       console.error('Erro ao fazer logout:', error);

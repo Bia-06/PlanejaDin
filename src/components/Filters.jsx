@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Filter, Calendar, ChevronDown, X } from 'lucide-react';
+import { Filter, ChevronDown, X } from 'lucide-react';
 
 const Filters = ({ onFilter, categories, initialFilters }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +11,6 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
     }));
   };
 
-  // Verifica se há algum filtro ativo para mostrar indicador visual
   const hasActiveFilters = 
     initialFilters.type !== 'all' || 
     initialFilters.category !== 'all' || 
@@ -20,7 +19,7 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
     initialFilters.endDate !== '';
 
   return (
-    <div className="relative">
+    <div className="relative md:static lg:relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
@@ -39,25 +38,29 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
 
       {isOpen && (
         <>
-          {/* Overlay para fechar ao clicar fora (opcional) */}
           <div 
-            className="fixed inset-0 z-10" 
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none md:inset-auto" 
             onClick={() => setIsOpen(false)}
           ></div>
 
-          <div className="absolute right-0 top-12 w-72 sm:w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-5 z-20 animate-scaleIn origin-top-right">
+          <div className="
+            fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm z-50 
+            md:absolute md:top-12 md:left-auto md:right-0 md:translate-x-0 md:translate-y-0 md:w-80
+            bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 p-5 animate-scaleIn
+          ">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-teal dark:text-white font-poppins">Filtrar por</h3>
+              <h3 className="font-bold text-teal dark:text-white font-poppins flex items-center gap-2">
+                <Filter className="w-4 h-4 text-mint" /> Filtrar Transações
+              </h3>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-4">
-              {/* Tipo */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Tipo</label>
                 <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
@@ -81,7 +84,6 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
                 </div>
               </div>
 
-              {/* Status */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Status</label>
                 <select
@@ -95,7 +97,6 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
                 </select>
               </div>
 
-              {/* Categoria - AQUI ESTAVA O ERRO, AGORA CORRIGIDO */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Categoria</label>
                 <select
@@ -105,7 +106,6 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
                 >
                   <option value="all">Todas as categorias</option>
                   {categories.map((cat, index) => (
-                    // Correção: Usamos cat.value como key e value, e cat.label para o texto visível
                     <option key={cat.value || index} value={cat.value}>
                       {cat.label}
                     </option>
@@ -113,7 +113,6 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
                 </select>
               </div>
 
-              {/* Data */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Período</label>
                 <div className="grid grid-cols-2 gap-2">
@@ -136,7 +135,6 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
                 </div>
               </div>
 
-              {/* Botão Limpar */}
               {hasActiveFilters && (
                 <button
                   onClick={() => onFilter({
@@ -148,9 +146,9 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
                     minAmount: '',
                     maxAmount: ''
                   })}
-                  className="w-full py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  className="w-full py-3 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors border border-red-100 dark:border-red-900/30 mt-2"
                 >
-                  Limpar Filtros
+                  Limpar Todos os Filtros
                 </button>
               )}
             </div>

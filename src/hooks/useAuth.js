@@ -11,7 +11,6 @@ export const useAuth = () => {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        // Correção aqui: getCurrentUser já retorna o usuário direto
         const currentUser = await getCurrentUser();
         setUser(currentUser || null);
       } catch (error) {
@@ -37,17 +36,16 @@ export const useAuth = () => {
     };
   }, []);
 
-  // Adicione esta função de logout
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      setUser(null); // Limpa o usuário localmente
+      setUser(null);
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
       throw error;
     }
   };
 
-  return { user, loading, signOut }; // Adicione signOut no retorno
+  return { user, loading, signOut }; 
 };

@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
-import { DEFAULT_CATEGORIES } from '../config/constants'; // Importante para o fallback
+import { DEFAULT_CATEGORIES } from '../config/constants'; 
 
 export const useTransactions = (userId) => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Estados novos
   const [reminders, setReminders] = useState([]);
-  const [categories, setCategories] = useState([]); // Começa vazio
+  const [categories, setCategories] = useState([]); 
   const [remindersLoading, setRemindersLoading] = useState(true);
 
-  // --- 1. TRANSAÇÕES ---
   const fetchTransactions = async () => {
     if (!userId) return;
     try {
@@ -31,7 +29,6 @@ export const useTransactions = (userId) => {
     }
   };
 
-  // --- 2. CATEGORIAS ---
   const fetchCategories = async () => {
     if (!userId) return;
     try {
@@ -42,10 +39,8 @@ export const useTransactions = (userId) => {
         .order('name', { ascending: true });
 
       if (!error && data && data.length > 0) {
-        // Se o usuário tem categorias no banco, usa elas
         setCategories(data);
       } else {
-        // Se não tem nada no banco, usa as PADRÃO do sistema (apenas visualmente)
         setCategories(DEFAULT_CATEGORIES.map((cat, i) => ({ id: `def-${i}`, name: cat })));
       }
     } catch (err) {
@@ -60,20 +55,16 @@ export const useTransactions = (userId) => {
       .select();
     
     if (!error) {
-      // Adiciona na lista visual imediatamente
       setCategories(prev => [...prev, data[0]]);
     }
     return { error };
   };
 
   const deleteCategory = async (id) => {
-    // Se for categoria padrão (id começa com 'def-'), apenas remove da tela
     if (id.toString().startsWith('def-')) {
       setCategories(prev => prev.filter(c => c.id !== id));
       return { error: null };
     }
-
-    // Se for do banco, deleta lá
     const { error } = await supabase.from('categories').delete().eq('id', id);
     if (!error) {
       setCategories(prev => prev.filter(c => c.id !== id));
@@ -81,7 +72,6 @@ export const useTransactions = (userId) => {
     return { error };
   };
 
-  // --- 3. LEMBRETES ---
   const fetchReminders = async () => {
     if (!userId) return;
     try {
@@ -131,7 +121,6 @@ export const useTransactions = (userId) => {
     return { error };
   };
 
-  // Carrega tudo ao iniciar
   useEffect(() => {
     if (userId) {
       fetchTransactions();
