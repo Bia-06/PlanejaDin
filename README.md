@@ -35,10 +35,10 @@ O projeto foi construído com uma stack moderna focada em escalabilidade e produ
 
 1. **Clone o repositório:**
    ```bash
-   git clone [https://github.com/SEU_USUARIO/GerenciaDin.git](https://github.com/SEU_USUARIO/GerenciaDin.git)
+   git clone [https://github.com/Bia-06/GerenciaDin](https://github.com/Bia-06/GerenciaDin)
 
 2. **Instale as dependências:**
-   cd GerenciaDin
+   cd gerenciadin
    npm install
 
 3. **Configure as Variáveis de Ambiente: Crie um arquivo .env na raiz do projeto e adicione suas credenciais do Supabase:**
