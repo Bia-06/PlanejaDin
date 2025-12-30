@@ -34,6 +34,10 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
+  // --- ESTADOS PARA EDIÇÃO ---
+  const [editingId, setEditingId] = useState(null);
+  const [editScope, setEditScope] = useState('single'); // 'single' ou 'all'
+
   const DEBUG_MODE = false; 
   let user = authUser;
   let loading = authLoading;
@@ -47,7 +51,6 @@ export default function App() {
     loading = false;
   }
 
-  // Logout
   const handleLogout = async () => {
     try {
       if (signOut && typeof signOut === 'function') {
@@ -66,6 +69,8 @@ export default function App() {
     categories, 
     loading: dataLoading, 
     addTransaction,
+    updateTransaction,      
+    updateTransactionGroup, 
     deleteTransaction,
     updateTransactionStatus,
     addReminder,
@@ -74,21 +79,19 @@ export default function App() {
     deleteCategory
   } = useTransactions(user?.id);
 
-  // Opções de Categoria
   const categoryOptions = categories.map(cat => ({
     value: cat.name,
     label: cat.name
   }));
 
   const [form, setForm] = useState({
-    description: '', amount: '', type: 'expense', category: 'Outros', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2
+    description: '', amount: '', type: 'expense', category: 'Outros', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2, group_id: null
   });
   
   const [formErrors, setFormErrors] = useState({});
   const [reminderForm, setReminderForm] = useState({ title: '', date: getLocalDateString(), details: '' });
   const [filters, setFilters] = useState({ type: 'all', category: 'all', status: 'all', startDate: '', endDate: '', minAmount: '', maxAmount: '' });
 
-  // Sumário
   const todayStr = getLocalDateString();
   const summary = {
     income: transactions.filter(t => t.type === 'income' && t.status === 'paid').reduce((acc, curr) => acc + curr.amount, 0),
@@ -98,7 +101,6 @@ export default function App() {
   };
   summary.balance = summary.income - summary.expense;
 
-  // Gráfico
   const getChartData = () => {
     const expenses = transactions.filter(t => t.type === 'expense');
     const totalsByCategory = expenses.reduce((acc, curr) => {
@@ -114,40 +116,106 @@ export default function App() {
   };
   const chartDataArray = getChartData();
 
-  // Interface
-  const openModal = (type, subType = 'expense') => {
+  // --- OPEN MODAL (Com correção do bug de valor) ---
+  const openModal = (type, subType = 'expense', dataToEdit = null) => {
     setModalType(type);
+    setEditScope('single'); 
+
     if (type === 'transaction') {
       setTransactionType(subType);
-      setForm(f => ({ ...f, type: subType }));
+      
+      if (dataToEdit) {
+        // MODO EDIÇÃO
+        setEditingId(dataToEdit.id);
+        setForm({
+          description: dataToEdit.description,
+          
+          // CORREÇÃO AQUI: .toFixed(2) garante que 1000 vire "1000.00" e não "1000"
+          amount: Number(dataToEdit.amount).toFixed(2).replace('.', ','),
+          
+          type: dataToEdit.type,
+          category: dataToEdit.category || 'Outros',
+          date: dataToEdit.date,
+          status: dataToEdit.status,
+          recurrence: 'single', 
+          installments: 2,
+          group_id: dataToEdit.group_id 
+        });
+      } else {
+        // MODO CRIAÇÃO
+        setEditingId(null);
+        setForm({
+            description: '', amount: '', type: subType, category: 'Outros', 
+            date: getLocalDateString(), status: 'pending', recurrence: 'single', 
+            installments: 2, group_id: null
+        });
+      }
     }
     setIsModalOpen(true);
   };
 
   const resetForms = () => {
-    setForm({ description: '', amount: '', type: 'expense', category: 'Outros', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2 });
+    setForm({ description: '', amount: '', type: 'expense', category: 'Outros', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2, group_id: null });
     setReminderForm({ title: '', date: getLocalDateString(), details: '' });
     setFormErrors({});
+    setEditingId(null);
   };
 
-  const handleAddTransaction = async (e) => {
+  // --- SAVE TRANSACTION ---
+  const handleSaveTransaction = async (e) => {
     e.preventDefault();
     if (!form.description.trim() || !form.amount) return;
     setActionLoading(true);
     const baseAmount = parseCommaValue(form.amount);
-    let loopCount = 1;
-    if (form.recurrence === 'fixed') loopCount = 12;
-    if (form.recurrence === 'installment') loopCount = parseInt(form.installments);
-    const [year, month, day] = form.date.split('-').map(Number);
+
     try {
-      for (let i = 0; i < loopCount; i++) {
-        let currentDate = new Date(year, month - 1 + i, day);
-        const dateString = getLocalDateString(currentDate);
-        let description = form.description;
-        if (form.recurrence === 'installment') description = `${form.description} (${i + 1}/${loopCount})`;
-        let status = i === 0 ? form.status : 'pending';
-        const transactionAmount = form.recurrence === 'installment' ? parseFloat((baseAmount / loopCount).toFixed(2)) : baseAmount;
-        await addTransaction({ description, amount: transactionAmount, type: form.type, category: form.category, date: dateString, status, user_id: user.id });
+      // 1. EDIÇÃO
+      if (editingId) {
+        if (editScope === 'all' && form.group_id) {
+            await updateTransactionGroup(form.group_id, {
+                description: form.description,
+                amount: baseAmount,
+                type: form.type,
+                category: form.category,
+            });
+        } else {
+            await updateTransaction(editingId, {
+                description: form.description,
+                amount: baseAmount,
+                type: form.type,
+                category: form.category,
+                date: form.date,
+                status: form.status
+            });
+        }
+      } 
+      // 2. CRIAÇÃO
+      else {
+        let loopCount = 1;
+        if (form.recurrence === 'fixed') loopCount = 12;
+        if (form.recurrence === 'installment') loopCount = parseInt(form.installments);
+        
+        const [year, month, day] = form.date.split('-').map(Number);
+        
+        let newGroupId = null;
+        if (loopCount > 1) {
+            newGroupId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
+        }
+
+        for (let i = 0; i < loopCount; i++) {
+          let currentDate = new Date(year, month - 1 + i, day);
+          const dateString = getLocalDateString(currentDate);
+          let description = form.description;
+          if (form.recurrence === 'installment') description = `${form.description} (${i + 1}/${loopCount})`;
+          let status = i === 0 ? form.status : 'pending';
+          const transactionAmount = form.recurrence === 'installment' ? parseFloat((baseAmount / loopCount).toFixed(2)) : baseAmount;
+          
+          await addTransaction({ 
+              description, amount: transactionAmount, type: form.type, category: form.category, 
+              date: dateString, status, user_id: user.id, 
+              group_id: newGroupId 
+          });
+        }
       }
       setIsModalOpen(false);
       resetForms();
@@ -196,7 +264,6 @@ export default function App() {
     }
   };
 
-  // Itens do menu
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Visão Geral' },
     { id: 'transactions', icon: List, label: 'Movimentações' },
@@ -305,33 +372,36 @@ export default function App() {
       </div>
       
       {/* Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'transaction' ? (transactionType === 'income' ? "Nova Receita" : "Nova Despesa") : "Novo Lembrete"}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'transaction' ? (editingId ? "Editar Transação" : (transactionType === 'income' ? "Nova Receita" : "Nova Despesa")) : "Novo Lembrete"}>
         {modalType === 'transaction' ? (
-          <form onSubmit={handleAddTransaction} className="space-y-3">
-            <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-2">
-              <button 
-                type="button" 
-                onClick={() => setForm({...form, type: 'expense'})} 
-                className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
-                  form.type === 'expense' 
-                    ? 'bg-white dark:bg-gray-700 text-red-500 shadow-sm ring-1 ring-black/5' 
-                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700/50'
-                }`}
-              >
-                Despesa
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setForm({...form, type: 'income'})} 
-                className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
-                  form.type === 'income' 
-                    ? 'bg-white dark:bg-gray-700 text-mint shadow-sm ring-1 ring-black/5' 
-                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700/50'
-                }`}
-              >
-                Receita
-              </button>
-            </div>
+          <form onSubmit={handleSaveTransaction} className="space-y-3">
+            
+            {!editingId && (
+                <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-2">
+                  <button 
+                    type="button" 
+                    onClick={() => setForm({...form, type: 'expense'})} 
+                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
+                      form.type === 'expense' 
+                        ? 'bg-white dark:bg-gray-700 text-red-500 shadow-sm ring-1 ring-black/5' 
+                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700/50'
+                    }`}
+                  >
+                    Despesa
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setForm({...form, type: 'income'})} 
+                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
+                      form.type === 'income' 
+                        ? 'bg-white dark:bg-gray-700 text-mint shadow-sm ring-1 ring-black/5' 
+                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700/50'
+                    }`}
+                  >
+                    Receita
+                  </button>
+                </div>
+            )}
 
             <Input label="Descrição" placeholder={form.type === 'income' ? "Ex: Salário, Venda, Reembolso..." : "Ex: Aluguel, Mercado, Uber..."} value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} required />
             <Input label="Valor (R$)" type="text" placeholder="0,00" value={formatValueForInput(form.amount)} onChange={(e) => setForm({...form, amount: handleAmountInputChange(e.target.value)})} required />
@@ -340,24 +410,48 @@ export default function App() {
               <Input label="Data" type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} required />
             </div>
 
-            <div className="mt-1">
-              <label className="block text-sm font-semibold text-teal dark:text-gray-300 mb-1">Repetição</label>
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setForm({...form, recurrence: 'single'})} className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'single' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
-                  <div className="w-2 h-2 rounded-full bg-current"></div> Única
-                </button>
-                <button type="button" onClick={() => setForm({...form, recurrence: 'fixed'})} className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'fixed' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
-                  <Repeat size={14} /> Fixa
-                </button>
-                <button type="button" onClick={() => setForm({...form, recurrence: 'installment'})} className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'installment' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
-                  <Layers size={14} /> Parcelada
-                </button>
-              </div>
-            </div>
+            {!editingId && (
+                <div className="mt-1">
+                  <label className="block text-sm font-semibold text-teal dark:text-gray-300 mb-1">Repetição</label>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setForm({...form, recurrence: 'single'})} className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'single' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
+                      <div className="w-2 h-2 rounded-full bg-current"></div> Única
+                    </button>
+                    <button type="button" onClick={() => setForm({...form, recurrence: 'fixed'})} className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'fixed' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
+                      <Repeat size={14} /> Fixa
+                    </button>
+                    <button type="button" onClick={() => setForm({...form, recurrence: 'installment'})} className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'installment' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
+                      <Layers size={14} /> Parcelada
+                    </button>
+                  </div>
+                </div>
+            )}
             
-            {form.recurrence === 'installment' && <Input label="Parcelas" type="number" value={form.installments} onChange={(e) => setForm({...form, installments: e.target.value})} min="2" />}
+            {form.recurrence === 'installment' && !editingId && <Input label="Parcelas" type="number" value={form.installments} onChange={(e) => setForm({...form, installments: e.target.value})} min="2" />}
+            
+            {/* SELEÇÃO: Editar Todos ou Único */}
+            {editingId && form.group_id && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-100 dark:border-amber-800 mb-3 mt-3">
+                    <p className="text-xs font-bold text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-1">
+                    <Repeat className="w-3 h-3" /> Editar:
+                    </p>
+                    <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="editScope" value="single" checked={editScope === 'single'} onChange={() => setEditScope('single')} className="text-mint focus:ring-mint" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Apenas este</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="editScope" value="all" checked={editScope === 'all'} onChange={() => setEditScope('all')} className="text-mint focus:ring-mint" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Todas fixas/recorrentes</span>
+                    </label>
+                    </div>
+                </div>
+            )}
+
             <div className="flex items-center gap-3 mt-1"><input type="checkbox" id="paidCheck" checked={form.status === 'paid'} onChange={(e) => setForm({...form, status: e.target.checked ? 'paid' : 'pending'})} className="w-5 h-5 rounded text-mint cursor-pointer" /><label htmlFor="paidCheck" className="text-sm font-medium text-teal dark:text-gray-300 cursor-pointer">Marcar como já pago/recebido?</label></div>
-            <Button type="submit" variant="primary" className="w-full mt-2" disabled={actionLoading}>{actionLoading ? "Processando..." : "Confirmar"}</Button>
+            <Button type="submit" variant="primary" className="w-full mt-2" disabled={actionLoading}>
+                {actionLoading ? "Processando..." : (editingId ? "Salvar Alterações" : "Confirmar")}
+            </Button>
           </form>
         ) : (
           <form onSubmit={handleAddReminder} className="space-y-4">

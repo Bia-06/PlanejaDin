@@ -93,7 +93,45 @@ export const useTransactions = (userId) => {
 
   const addTransaction = async (transactionData) => {
     const { data, error } = await supabase.from('transactions').insert([transactionData]).select();
-    if (!error) setTransactions(prev => [data[0], ...prev]);
+    if (!error) setTransactions(prev => [data[0], ...prev].sort((a, b) => new Date(b.date) - new Date(a.date)));
+    return { data, error };
+  };
+
+  // --- NOVO: Função para atualizar uma única transação ---
+  const updateTransaction = async (id, updates) => {
+    const { data, error } = await supabase
+      .from('transactions')
+      .update(updates)
+      .eq('id', id)
+      .select();
+    
+    if (!error && data) {
+        setTransactions(prev => prev.map(t => t.id === id ? data[0] : t));
+    }
+    return { data, error };
+  };
+
+  // --- NOVO: Função para atualizar grupo (ex: todas as parcelas) ---
+  const updateTransactionGroup = async (groupId, updates) => {
+    // Removemos ID e DATA para não sobrepor datas diferentes das parcelas
+    const { id, date, ...safeUpdates } = updates;
+    
+    const { data, error } = await supabase
+      .from('transactions')
+      .update(safeUpdates)
+      .eq('group_id', groupId)
+      .eq('user_id', userId) // Segurança extra
+      .select();
+
+    if (!error && data) {
+       // Atualiza visualmente todas que tem aquele groupId
+       setTransactions(prev => prev.map(t => {
+           if (t.group_id === groupId) {
+               return { ...t, ...safeUpdates };
+           }
+           return t;
+       }));
+    }
     return { data, error };
   };
 
@@ -135,6 +173,8 @@ export const useTransactions = (userId) => {
     categories,
     loading: loading || remindersLoading,
     addTransaction,
+    updateTransaction,      // EXPORTADO
+    updateTransactionGroup, // EXPORTADO
     deleteTransaction, 
     updateTransactionStatus,
     addReminder,

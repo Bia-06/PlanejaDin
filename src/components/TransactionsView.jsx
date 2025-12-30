@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   ArrowUp, ArrowDown, Search, Plus, 
-  Clock, AlertCircle, CheckCircle, Trash2, X 
+  Clock, AlertCircle, CheckCircle, Trash2, X, Pencil 
 } from 'lucide-react';
 import Button from './UI/Button';
 import Filters from './Filters';
@@ -62,7 +62,7 @@ const TransactionsView = ({
             )}
           </div>
           <Filters onFilter={setFilters} categories={categoryOptions} initialFilters={filters} />
-          <Button onClick={() => openModal('transaction')} variant="primary" className="text-sm px-4 py-2">
+          <Button onClick={() => openModal('transaction', 'expense', null)} variant="primary" className="text-sm px-4 py-2">
             <Plus className="w-5 h-5" /> Nova
           </Button>
         </div>
@@ -144,6 +144,15 @@ const TransactionsView = ({
                       )}
                     </button>
                     
+                    {/* Botão de Editar */}
+                    <button 
+                      onClick={() => openModal('transaction', item.type, item)} 
+                      className="p-2 text-gray-400 hover:text-teal transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                      title="Editar"
+                    >
+                      <Pencil className="w-5 h-5" />
+                    </button>
+
                     <button onClick={() => handleDelete('transactions', item.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20">
                       <Trash2 className="w-5 h-5" />
                     </button>
