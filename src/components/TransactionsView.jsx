@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ArrowUp, ArrowDown, Search, Plus, 
   Clock, AlertCircle, CheckCircle, Trash2, X, Pencil 
@@ -16,9 +16,13 @@ const TransactionsView = ({
   categoryOptions, 
   openModal, 
   handleToggleStatus, 
-  handleDelete 
+  handleDelete,
+  handleBatchDelete // <--- Recebendo a função de delete em massa
 }) => {
   const today = getLocalDateString();
+  
+  // --- Estado de Seleção ---
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const getFilteredTransactions = () => {
     return transactions.filter(transaction => {
@@ -33,39 +37,83 @@ const TransactionsView = ({
   const filteredTransactions = getFilteredTransactions();
   const hasActiveFilters = Object.keys(filters).some(key => filters[key] && filters[key] !== 'all' && filters[key] !== '');
 
+  // Lógica para Selecionar Um
+  const toggleSelect = (id) => {
+    if (selectedIds.includes(id)) {
+        setSelectedIds(selectedIds.filter(itemId => itemId !== id));
+    } else {
+        setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  // Lógica para Selecionar Todos (Visíveis)
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredTransactions.length && filteredTransactions.length > 0) {
+        setSelectedIds([]); // Desmarcar tudo
+    } else {
+        setSelectedIds(filteredTransactions.map(t => t.id)); // Marcar todos visíveis
+    }
+  };
+
+  // Executar exclusão e limpar seleção
+  const onBatchDeleteClick = async () => {
+     if(selectedIds.length === 0) return;
+     await handleBatchDelete(selectedIds);
+     setSelectedIds([]); // Limpa seleção após deletar
+  };
+
   return (
     <div className="animate-fadeIn pb-24 font-inter">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <h2 className="text-2xl font-bold text-teal dark:text-white font-poppins">
-          Suas Movimentações 
-          {filteredTransactions.length !== transactions.length && (
-            <span className="text-sm font-normal text-gray-500 ml-2">
-              ({filteredTransactions.length} de {transactions.length})
-            </span>
+        <h2 className="text-2xl font-bold text-teal dark:text-white font-poppins flex items-center gap-3">
+          Suas Movimentações
+          {selectedIds.length > 0 && (
+             <span className="text-xs bg-mint text-white px-2 py-1 rounded-lg">
+                {selectedIds.length} selecionado(s)
+             </span>
           )}
         </h2>
         
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input 
-              type="text" 
-              placeholder="Buscar transações..." 
-              value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} 
-              className="w-full md:w-64 pl-10 pr-10 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-teal dark:text-white focus:ring-2 focus:ring-mint outline-none" 
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-          <Filters onFilter={setFilters} categories={categoryOptions} initialFilters={filters} />
-          <Button onClick={() => openModal('transaction', 'expense', null)} variant="primary" className="text-sm px-4 py-2">
-            <Plus className="w-5 h-5" /> Nova
-          </Button>
-        </div>
+        {/* Barra de Ações (Muda se tiver itens selecionados) */}
+{selectedIds.length > 0 ? (
+   <div className="flex items-center gap-2 animate-fadeIn">
+      <Button 
+        onClick={onBatchDeleteClick} 
+        // AQUI ESTÁ A MUDANÇA: Fundo vermelho forte, texto branco e sombra
+        className="bg-red-600 text-white hover:bg-red-700 shadow-md border-transparent px-4 py-2 text-sm flex items-center gap-2 font-bold"
+      >
+         <Trash2 className="w-4 h-4" /> Apagar Selecionados
+      </Button>
+      <button 
+        onClick={() => setSelectedIds([])} 
+        className="text-gray-400 hover:text-gray-600 p-2"
+      >
+        <X className="w-5 h-5" />
+      </button>
+   </div>
+) : (
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input 
+                  type="text" 
+                  placeholder="Buscar transações..." 
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)} 
+                  className="w-full md:w-64 pl-10 pr-10 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-teal dark:text-white focus:ring-2 focus:ring-mint outline-none" 
+                />
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <Filters onFilter={setFilters} categories={categoryOptions} initialFilters={filters} />
+              <Button onClick={() => openModal('transaction', 'expense', null)} variant="primary" className="text-sm px-4 py-2">
+                <Plus className="w-5 h-5" /> Nova
+              </Button>
+            </div>
+        )}
       </div>
 
       {hasActiveFilters && (
@@ -76,6 +124,21 @@ const TransactionsView = ({
         </div>
       )}
 
+      {/* Checkbox Selecionar Todos (Só aparece se houver lista) */}
+      {filteredTransactions.length > 0 && (
+          <div className="mb-4 flex items-center gap-3 px-2">
+             <input 
+                type="checkbox" 
+                checked={selectedIds.length > 0 && selectedIds.length === filteredTransactions.length}
+                onChange={toggleSelectAll}
+                className="w-5 h-5 rounded border-gray-300 text-mint focus:ring-mint cursor-pointer accent-mint"
+             />
+             <span className="text-sm text-gray-500 dark:text-gray-400">
+                {selectedIds.length === filteredTransactions.length ? "Desmarcar todos" : "Selecionar todos"}
+             </span>
+          </div>
+      )}
+
       <div className="space-y-3">
         {filteredTransactions.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
@@ -84,11 +147,28 @@ const TransactionsView = ({
         ) : (
           filteredTransactions.map(item => {
             const isOverdue = item.status === 'pending' && item.date < today;
+            const isSelected = selectedIds.includes(item.id);
             
             return (
-              <div key={item.id} className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 flex flex-col md:flex-row md:items-center justify-between group transition-all hover:-translate-y-1 gap-4 md:gap-0">
+              <div 
+                key={item.id} 
+                className={`
+                    bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border transition-all hover:-translate-y-1 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0
+                    ${isSelected ? 'border-mint ring-1 ring-mint bg-mint/5 dark:bg-mint/5' : 'border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}
+                `}
+              >
                 
                 <div className="flex items-center gap-4 md:gap-5 w-full md:w-auto">
+                  {/* Checkbox Individual */}
+                  <div className="flex items-center justify-center">
+                    <input 
+                        type="checkbox" 
+                        checked={isSelected}
+                        onChange={() => toggleSelect(item.id)}
+                        className="w-5 h-5 rounded border-gray-300 text-mint focus:ring-mint cursor-pointer accent-mint"
+                    />
+                  </div>
+
                   <div className={`p-4 rounded-2xl flex items-center justify-center shrink-0 ${item.type === 'income' ? 'bg-mint/10 text-mint' : 'bg-red-50 dark:bg-red-900/20 text-red-500'}`}>
                     {item.type === 'income' ? <ArrowUp className="w-6 h-6" /> : <ArrowDown className="w-6 h-6" />}
                   </div>

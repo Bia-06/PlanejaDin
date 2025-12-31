@@ -72,6 +72,7 @@ export default function App() {
     updateTransaction,      
     updateTransactionGroup, 
     deleteTransaction,
+    deleteTransactions, // <--- Importado a nova função
     updateTransactionStatus,
     addReminder,
     deleteReminder,
@@ -129,10 +130,8 @@ export default function App() {
         setEditingId(dataToEdit.id);
         setForm({
           description: dataToEdit.description,
-          
-          // CORREÇÃO AQUI: .toFixed(2) garante que 1000 vire "1000.00" e não "1000"
+          // Garante formatação correta do valor na edição
           amount: Number(dataToEdit.amount).toFixed(2).replace('.', ','),
-          
           type: dataToEdit.type,
           category: dataToEdit.category || 'Outros',
           date: dataToEdit.date,
@@ -239,6 +238,13 @@ export default function App() {
     }
   };
 
+  // --- NOVO: Função para confirmar deleção em massa ---
+  const handleBatchDelete = async (ids) => {
+    if (window.confirm(`Tem certeza que deseja excluir ${ids.length} itens selecionados?`)) {
+        await deleteTransactions(ids);
+    }
+  };
+
   const handleToggleStatus = async (item) => {
     const newStatus = item.status === 'paid' ? 'pending' : 'paid';
     await updateTransactionStatus(item.id, newStatus);
@@ -255,7 +261,9 @@ export default function App() {
   const renderView = () => {
     switch (view) {
       case 'dashboard': return <DashboardView user={user} summary={summary} chartData={chartDataArray} reminders={reminders} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} openModal={openModal} setView={setView} />;
-      case 'transactions': return <TransactionsView transactions={transactions} filters={filters} setFilters={setFilters} searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryOptions={categoryOptions} openModal={openModal} handleToggleStatus={handleToggleStatus} handleDelete={handleDelete} />;
+      case 'transactions': 
+        // Passando a nova prop handleBatchDelete
+        return <TransactionsView transactions={transactions} filters={filters} setFilters={setFilters} searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryOptions={categoryOptions} openModal={openModal} handleToggleStatus={handleToggleStatus} handleDelete={handleDelete} handleBatchDelete={handleBatchDelete} />;
       case 'reports': return <ReportsView transactions={transactions} />;
       case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} />;
       case 'calendar': return <CalendarView transactions={transactions} reminders={reminders} />;
@@ -429,7 +437,6 @@ export default function App() {
             
             {form.recurrence === 'installment' && !editingId && <Input label="Parcelas" type="number" value={form.installments} onChange={(e) => setForm({...form, installments: e.target.value})} min="2" />}
             
-            {/* SELEÇÃO: Editar Todos ou Único */}
             {editingId && form.group_id && (
                 <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-100 dark:border-amber-800 mb-3 mt-3">
                     <p className="text-xs font-bold text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-1">
@@ -442,7 +449,7 @@ export default function App() {
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="editScope" value="all" checked={editScope === 'all'} onChange={() => setEditScope('all')} className="text-mint focus:ring-mint" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">Todas fixas/recorrentes</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">recorrentes</span>
                     </label>
                     </div>
                 </div>
