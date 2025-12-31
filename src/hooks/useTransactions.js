@@ -157,6 +157,19 @@ export const useTransactions = (userId) => {
     return { data, error };
   };
 
+  const updateReminder = async (id, updates) => {
+    const { data, error } = await supabase
+      .from('reminders')
+      .update(updates)
+      .eq('id', id)
+      .select();
+
+    if (!error && data) {
+      setReminders(prev => prev.map(r => r.id === id ? data[0] : r));
+    }
+    return { data, error };
+  };
+
   const deleteReminder = async (id) => {
     const { error } = await supabase.from('reminders').delete().eq('id', id);
     if (!error) setReminders(prev => prev.filter(r => r.id !== id));
@@ -183,6 +196,7 @@ export const useTransactions = (userId) => {
     deleteTransactions, 
     updateTransactionStatus,
     addReminder,
+    updateReminder, 
     deleteReminder,
     addCategory,
     deleteCategory,

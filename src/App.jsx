@@ -34,8 +34,9 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
+  // --- ESTADOS PARA EDIÇÃO ---
   const [editingId, setEditingId] = useState(null);
-  const [editScope, setEditScope] = useState('single'); 
+  const [editScope, setEditScope] = useState('single'); // 'single' ou 'all'
 
   const DEBUG_MODE = false; 
   let user = authUser;
@@ -61,6 +62,7 @@ export default function App() {
     }
   };
 
+  // --- Funções do Banco de Dados ---
   const { 
     transactions, 
     reminders, 
@@ -73,6 +75,7 @@ export default function App() {
     deleteTransactions, 
     updateTransactionStatus,
     addReminder,
+    updateReminder, // Importante: agora esta função existe no hook!
     deleteReminder,
     addCategory,
     deleteCategory
@@ -91,11 +94,13 @@ export default function App() {
   const [reminderForm, setReminderForm] = useState({ title: '', date: getLocalDateString(), details: '' });
   const [filters, setFilters] = useState({ type: 'all', category: 'all', status: 'all', startDate: '', endDate: '', minAmount: '', maxAmount: '' });
 
+  // --- CORREÇÃO DO SUMÁRIO (APENAS MÊS ATUAL) ---
   const todayStr = getLocalDateString();
   const now = new Date();
-  const currentMonth = now.getMonth() + 1; 
+  const currentMonth = now.getMonth() + 1; // 1 a 12
   const currentYear = now.getFullYear();
 
+  // Função auxiliar para verificar se a data é do mês atual
   const isCurrentMonth = (dateString) => {
     if (!dateString) return false;
     const [year, month] = dateString.split('-').map(Number);
@@ -103,7 +108,6 @@ export default function App() {
   };
 
   const summary = {
-
     income: transactions
       .filter(t => t.type === 'income' && t.status === 'paid' && isCurrentMonth(t.date))
       .reduce((acc, curr) => acc + curr.amount, 0),
@@ -136,6 +140,7 @@ export default function App() {
   };
   const chartDataArray = getChartData();
 
+  // --- OPEN MODAL ATUALIZADO ---
   const openModal = (type, subType = 'expense', dataToEdit = null) => {
     setModalType(type);
     setEditScope('single'); 
@@ -164,7 +169,22 @@ export default function App() {
             installments: 2, group_id: null
         });
       }
+    } 
+    // --- Lógica para Edição de Lembrete ---
+    else if (type === 'reminder') {
+        if (dataToEdit) {
+            setEditingId(dataToEdit.id);
+            setReminderForm({
+                title: dataToEdit.title,
+                date: dataToEdit.date,
+                details: dataToEdit.details || ''
+            });
+        } else {
+            setEditingId(null);
+            setReminderForm({ title: '', date: getLocalDateString(), details: '' });
+        }
     }
+    
     setIsModalOpen(true);
   };
 
@@ -233,11 +253,26 @@ export default function App() {
     } catch (err) { console.error(err); } finally { setActionLoading(false); }
   };
 
+  // --- FUNÇÃO DE SALVAR/EDITAR LEMBRETE ---
   const handleAddReminder = async (e) => {
     e.preventDefault();
     setActionLoading(true);
     try {
-      await addReminder({ title: reminderForm.title, date: reminderForm.date, details: reminderForm.details });
+      if (editingId) {
+          // Edição
+          await updateReminder(editingId, { 
+              title: reminderForm.title, 
+              date: reminderForm.date, 
+              details: reminderForm.details 
+          });
+      } else {
+          // Criação
+          await addReminder({ 
+              title: reminderForm.title, 
+              date: reminderForm.date, 
+              details: reminderForm.details 
+          });
+      }
       setIsModalOpen(false);
       resetForms();
     } catch (err) { console.error(err); } finally { setActionLoading(false); }
@@ -385,7 +420,7 @@ export default function App() {
 
       </div>
       
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'transaction' ? (editingId ? "Editar Transação" : (transactionType === 'income' ? "Nova Receita" : "Nova Despesa")) : "Novo Lembrete"}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'transaction' ? (editingId ? "Editar Transação" : (transactionType === 'income' ? "Nova Receita" : "Nova Despesa")) : (editingId ? "Editar Lembrete" : "Novo Lembrete")}>
         {modalType === 'transaction' ? (
           <form onSubmit={handleSaveTransaction} className="space-y-3">
             
@@ -470,7 +505,9 @@ export default function App() {
             <Input label="Título" placeholder="Ex: Consulta Médica..." value={reminderForm.title} onChange={(e) => setReminderForm({...reminderForm, title: e.target.value})} required />
             <Input label="Data" type="date" value={reminderForm.date} onChange={(e) => setReminderForm({...reminderForm, date: e.target.value})} required />
             <textarea className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-teal dark:text-white" rows="3" placeholder="Ex: Local, horário..." value={reminderForm.details} onChange={(e) => setReminderForm({...reminderForm, details: e.target.value})} />
-            <Button type="submit" variant="primary" className="w-full" disabled={actionLoading}>Agendar Lembrete</Button>
+            <Button type="submit" variant="primary" className="w-full" disabled={actionLoading}>
+                {editingId ? "Salvar Alterações" : "Agendar Lembrete"}
+            </Button>
           </form>
         )}
       </Modal>
