@@ -97,7 +97,6 @@ export const useTransactions = (userId) => {
     return { data, error };
   };
 
-  // Função para atualizar uma única transação
   const updateTransaction = async (id, updates) => {
     const { data, error } = await supabase
       .from('transactions')
@@ -111,20 +110,17 @@ export const useTransactions = (userId) => {
     return { data, error };
   };
 
-  // Função para atualizar grupo (ex: todas as parcelas)
   const updateTransactionGroup = async (groupId, updates) => {
-    // Removemos ID e DATA para não sobrepor datas diferentes das parcelas
     const { id, date, ...safeUpdates } = updates;
     
     const { data, error } = await supabase
       .from('transactions')
       .update(safeUpdates)
       .eq('group_id', groupId)
-      .eq('user_id', userId) // Segurança extra
+      .eq('user_id', userId) 
       .select();
 
     if (!error && data) {
-       // Atualiza visualmente todas que tem aquele groupId
        setTransactions(prev => prev.map(t => {
            if (t.group_id === groupId) {
                return { ...t, ...safeUpdates };
@@ -141,7 +137,6 @@ export const useTransactions = (userId) => {
     return { error };
   };
 
-  // --- NOVO: Função para apagar VÁRIOS itens de uma vez ---
   const deleteTransactions = async (ids) => {
     const { error } = await supabase.from('transactions').delete().in('id', ids);
     if (!error) {
@@ -185,7 +180,7 @@ export const useTransactions = (userId) => {
     updateTransaction,
     updateTransactionGroup,
     deleteTransaction,
-    deleteTransactions, // <--- EXPORTADO
+    deleteTransactions, 
     updateTransactionStatus,
     addReminder,
     deleteReminder,

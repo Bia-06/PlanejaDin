@@ -8,22 +8,69 @@ import {
 } from 'recharts';
 import Card from './UI/Card';
 import Button from './UI/Button';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, getLocalDateString } from '../utils/formatters';
 import { THEME, CHART_COLORS } from '../config/constants';
 
 const ReportsView = ({ transactions = [] }) => {
-  const [timeRange, setTimeRange] = useState('6months');
+  const [timeRange, setTimeRange] = useState('currentMonth'); 
   const [chartType, setChartType] = useState('composed');
+
+  const filteredTransactions = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    return transactions.filter(t => {
+       const tDate = new Date(t.date + 'T12:00:00');
+       
+       if (timeRange === 'currentMonth') {
+           return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+       }
+       
+       if (timeRange === '3months') {
+           const cutOff = new Date();
+           cutOff.setMonth(now.getMonth() - 3);
+           return tDate >= cutOff;
+       }
+
+       if (timeRange === '6months') {
+           const cutOff = new Date();
+           cutOff.setMonth(now.getMonth() - 6);
+           return tDate >= cutOff;
+       }
+
+       if (timeRange === '1year') {
+           const cutOff = new Date();
+           cutOff.setMonth(now.getMonth() - 12);
+           return tDate >= cutOff;
+       }
+
+       return true; 
+    }).sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [transactions, timeRange]);
 
   const evolutionData = useMemo(() => {
     const grouped = {};
-    
-    transactions.forEach(t => {
+    const isDailyView = timeRange === 'currentMonth'; 
+
+    filteredTransactions.forEach(t => {
       const dateObj = new Date(t.date + 'T12:00:00');
-      const key = dateObj.toISOString().slice(0, 7); 
+      
+      let key;
+      if (isDailyView) {
+          key = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      } else {
+          key = dateObj.toISOString().slice(0, 7); 
+      }
       
       if (!grouped[key]) {
-        grouped[key] = { name: key, Receitas: 0, Despesas: 0, Lucro: 0, date: dateObj };
+        grouped[key] = { 
+            name: key, 
+            displayDate: isDailyView ? key : new Date(key + '-02').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
+            Receitas: 0, 
+            Despesas: 0, 
+            Lucro: 0 
+        };
       }
 
       if (t.type === 'income') {
@@ -33,26 +80,15 @@ const ReportsView = ({ transactions = [] }) => {
       }
     });
 
-    let data = Object.values(grouped).map(item => ({
+    return Object.values(grouped).map(item => ({
       ...item,
       Lucro: item.Receitas - item.Despesas
     }));
-
-    data.sort((a, b) => a.date - b.date);
-
-    if (timeRange === '3months') {
-      data = data.slice(-3);
-    } else if (timeRange === '6months') {
-      data = data.slice(-6);
-    } else if (timeRange === '1year') {
-      data = data.slice(-12);
-    }
-
-    return data;
-  }, [transactions, timeRange]);
+  }, [filteredTransactions, timeRange]);
 
   const categoryData = useMemo(() => {
-    const expenses = transactions.filter(t => t.type === 'expense');
+    
+    const expenses = filteredTransactions.filter(t => t.type === 'expense');
     const grouped = {};
 
     expenses.forEach(t => {
@@ -68,7 +104,7 @@ const ReportsView = ({ transactions = [] }) => {
         color: CHART_COLORS[index % CHART_COLORS.length] 
       }))
       .sort((a, b) => b.value - a.value);
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   const monthlyComparison = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -105,16 +141,14 @@ const ReportsView = ({ transactions = [] }) => {
 
   const CustomBarTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      const displayLabel = payload[0]?.payload?.displayDate || label;
       return (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-          <p className="font-bold text-teal dark:text-white mb-2">{label}</p>
+          <p className="font-bold text-teal dark:text-white mb-2">{displayLabel}</p>
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center justify-between mb-1 gap-4">
               <div className="flex items-center gap-2">
-                <div 
-                  className="w-3 h-3 rounded" 
-                  style={{ backgroundColor: entry.color || entry.fill }}
-                ></div>
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: entry.color || entry.fill }}></div>
                 <span className="text-sm text-gray-600 dark:text-gray-300">{entry.name}:</span>
               </div>
               <span className="font-bold">{formatCurrency(entry.value)}</span>
@@ -176,6 +210,7 @@ const ReportsView = ({ transactions = [] }) => {
               onChange={(e) => setTimeRange(e.target.value)}
               className="bg-transparent outline-none text-sm text-gray-700 dark:text-gray-200 cursor-pointer"
             >
+              <option value="currentMonth" className="dark:bg-gray-800">Mês Atual</option>
               <option value="3months" className="dark:bg-gray-800">Últimos 3 meses</option>
               <option value="6months" className="dark:bg-gray-800">Últimos 6 meses</option>
               <option value="1year" className="dark:bg-gray-800">Último ano</option>
@@ -204,7 +239,7 @@ const ReportsView = ({ transactions = [] }) => {
               <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-mint" />
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">Período selecionado</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">No período selecionado</p>
         </Card>
         
         <Card className="p-4">
@@ -223,14 +258,14 @@ const ReportsView = ({ transactions = [] }) => {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Lucro Acumulado</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Lucro Líquido</p>
               <p className="text-1 font-bold text-yellow truncate">{formatCurrency(totalProfit)}</p>
             </div>
             <div className="p-2 md:p-3 bg-yellow/10 rounded-full shrink-0">
               <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-yellow" />
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">Saldo positivo</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">No período selecionado</p>
         </Card>
         
         <Card className="p-4">
@@ -243,7 +278,7 @@ const ReportsView = ({ transactions = [] }) => {
               <span className="text-purple-500 font-bold text-lg md:text-xl">{categoryData.length}</span>
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">Ativas</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">Ativas no período</p>
         </Card>
       </div>
 
@@ -251,8 +286,10 @@ const ReportsView = ({ transactions = [] }) => {
         <Card className="lg:col-span-2">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-teal dark:text-white">Fluxo de Caixa Mensal</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Receitas vs Despesas vs Lucro</p>
+              <h3 className="text-lg font-bold text-teal dark:text-white">Fluxo Financeiro</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {timeRange === 'currentMonth' ? 'Detalhamento diário' : 'Evolução mensal'}
+              </p>
             </div>
             <div className="flex gap-2 mt-2 md:mt-0 overflow-x-auto pb-1 md:pb-0">
               {['composed', 'area', 'bar'].map(type => (
@@ -277,7 +314,7 @@ const ReportsView = ({ transactions = [] }) => {
                 <ComposedChart data={evolutionData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} vertical={false} />
                   <XAxis 
-                    dataKey="name" 
+                    dataKey="displayDate" 
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#94a3b8', fontSize: 12 }}
@@ -291,29 +328,9 @@ const ReportsView = ({ transactions = [] }) => {
                   />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Legend />
-                  <Bar 
-                    dataKey="Receitas" 
-                    fill={THEME.mint} 
-                    radius={[6, 6, 0, 0]} 
-                    barSize={24}
-                    name="Receitas"
-                  />
-                  <Bar 
-                    dataKey="Despesas" 
-                    fill={THEME.teal} 
-                    radius={[6, 6, 0, 0]} 
-                    barSize={24}
-                    name="Despesas"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="Lucro" 
-                    stroke={THEME.yellow} 
-                    strokeWidth={3}
-                    dot={{ r: 5, fill: THEME.yellow }}
-                    activeDot={{ r: 8 }}
-                    name="Lucro"
-                  />
+                  <Bar dataKey="Receitas" fill={THEME.mint} radius={[6, 6, 0, 0]} barSize={20} name="Receitas" />
+                  <Bar dataKey="Despesas" fill={THEME.teal} radius={[6, 6, 0, 0]} barSize={20} name="Despesas" />
+                  <Line type="monotone" dataKey="Lucro" stroke={THEME.yellow} strokeWidth={3} dot={{ r: 4, fill: THEME.yellow }} activeDot={{ r: 6 }} name="Lucro" />
                 </ComposedChart>
               ) : chartType === 'area' ? (
                 <AreaChart data={evolutionData}>
@@ -328,28 +345,16 @@ const ReportsView = ({ transactions = [] }) => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
-                  <XAxis dataKey="name" tick={{ fill: '#94a3b8' }} />
+                  <XAxis dataKey="displayDate" tick={{ fill: '#94a3b8' }} />
                   <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{ fill: '#94a3b8' }} width={40} />
                   <Tooltip content={<CustomBarTooltip />} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="Receitas" 
-                    stroke={THEME.mint} 
-                    fill="url(#colorReceitas)" 
-                    strokeWidth={2}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="Despesas" 
-                    stroke={THEME.teal} 
-                    fill="url(#colorDespesas)" 
-                    strokeWidth={2}
-                  />
+                  <Area type="monotone" dataKey="Receitas" stroke={THEME.mint} fill="url(#colorReceitas)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="Despesas" stroke={THEME.teal} fill="url(#colorDespesas)" strokeWidth={2} />
                 </AreaChart>
               ) : (
                 <BarChart data={evolutionData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
-                  <XAxis dataKey="name" tick={{ fill: '#94a3b8' }} />
+                  <XAxis dataKey="displayDate" tick={{ fill: '#94a3b8' }} />
                   <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{ fill: '#94a3b8' }} width={40} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Legend />
@@ -365,7 +370,7 @@ const ReportsView = ({ transactions = [] }) => {
           <div className="flex items-center justify-between mb-2">
             <div>
               <h3 className="text-lg font-bold text-teal dark:text-white">Distribuição de Gastos</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Por categoria</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Por categoria (Período)</p>
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
@@ -374,49 +379,48 @@ const ReportsView = ({ transactions = [] }) => {
           </div>
           
           <div className="h-[300px] md:h-[380px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="51%"
-                  innerRadius={60}
-                  outerRadius={90} 
-                  paddingAngle={3}
-                  dataKey="value"
-                  label={(entry) => `${entry.name}`}
-                  labelLine={true}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.color}
-                      stroke="transparent"
+            {categoryData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="51%"
+                    innerRadius={60}
+                    outerRadius={90} 
+                    paddingAngle={3}
+                    dataKey="value"
+                    label={(entry) => `${entry.name}`}
+                    labelLine={true}
+                    >
+                    {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />
+                    ))}
+                    </Pie>
+                    <Tooltip content={<CustomPieTooltip />} />
+                    <Legend 
+                    layout="horizontal"
+                    verticalAlign="bottom"
+                    align="center"
+                    iconType="circle"
+                    wrapperStyle={{ paddingBottom: '0px', fontSize: '12px' }} 
+                    formatter={(value) => <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">{value}</span>}
                     />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomPieTooltip />} />
-                <Legend 
-                  layout="horizontal"
-                  verticalAlign="bottom"
-                  align="center"
-                  iconType="circle"
-                  wrapperStyle={{ paddingBottom: '0px', fontSize: '12px' }} 
-                  formatter={(value) => (
-                    <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">
-                      {value}
-                    </span>
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+                </PieChart>
+                </ResponsiveContainer>
+            ) : (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <PieChartIcon className="w-10 h-10 mb-2 opacity-50" />
+                    <p>Sem despesas neste período</p>
+                </div>
+            )}
           </div>
         </Card>
 
         <Card>
           <div className="mb-6">
             <h3 className="text-lg font-bold text-teal dark:text-white">Evolução do Lucro</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Margem mensal</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Saldo líquido no período</p>
           </div>
           
           <div className="h-[250px] md:h-[300px]">
@@ -429,51 +433,23 @@ const ReportsView = ({ transactions = [] }) => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#94a3b8', fontSize: 12 }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#94a3b8', fontSize: 12 }}
-                  width={40}
-                />
+                <XAxis dataKey="displayDate" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={40} />
                 <Tooltip 
                   formatter={(value) => [formatCurrency(value), 'Lucro']}
-                  labelFormatter={(label) => `Mês: ${label}`}
+                  labelFormatter={(label) => `${label}`}
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="Lucro" 
-                  stroke={THEME.yellow} 
-                  strokeWidth={3}
-                  fill="url(#colorLucro)" 
-                  activeDot={{ r: 6, fill: THEME.yellow }}
-                />
+                <Area type="monotone" dataKey="Lucro" stroke={THEME.yellow} strokeWidth={3} fill="url(#colorLucro)" activeDot={{ r: 6, fill: THEME.yellow }} />
               </AreaChart>
             </ResponsiveContainer>
-          </div>
-          
-          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Lucro Médio Mensal</p>
-                <p className="text-xl font-bold text-teal dark:text-white">
-                  {evolutionData.length > 0 ? formatCurrency(totalProfit / evolutionData.length) : formatCurrency(0)}
-                </p>
-              </div>
-            </div>
           </div>
         </Card>
       </div>
 
       <Card>
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-2">
-          <h3 className="text-lg font-bold text-teal dark:text-white">Comparativo de Receitas (Ano a Ano)</h3>
+          <h3 className="text-lg font-bold text-teal dark:text-white">Comparativo Anual (Jan-Dez)</h3>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-mint"></div>

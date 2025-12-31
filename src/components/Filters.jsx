@@ -19,7 +19,7 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
     initialFilters.endDate !== '';
 
   return (
-    <div className="relative md:static lg:relative">
+    <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
@@ -39,118 +39,127 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
       {isOpen && (
         <>
           <div 
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none md:inset-auto" 
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none" 
             onClick={() => setIsOpen(false)}
           ></div>
 
-          <div className="
-            fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm z-50 
-            md:absolute md:top-12 md:left-auto md:right-0 md:translate-x-0 md:translate-y-0 md:w-80
-            bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 p-5 animate-scaleIn
-          ">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-teal dark:text-white font-poppins flex items-center gap-2">
-                <Filter className="w-4 h-4 text-mint" /> Filtrar Transações
-              </h3>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Tipo</label>
-                <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-                  {[
-                    { val: 'all', label: 'Todos' },
-                    { val: 'income', label: 'Receitas' },
-                    { val: 'expense', label: 'Despesas' }
-                  ].map(opt => (
-                    <button
-                      key={opt.val}
-                      onClick={() => handleChange('type', opt.val)}
-                      className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
-                        initialFilters.type === opt.val
-                          ? 'bg-white dark:bg-gray-600 text-teal dark:text-white shadow-sm'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Status</label>
-                <select
-                  value={initialFilters.status}
-                  onChange={(e) => handleChange('status', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm text-teal dark:text-white focus:outline-none focus:ring-2 focus:ring-mint"
+          <div 
+            className="
+              fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none
+              md:absolute md:inset-auto md:top-full md:right-0 md:mt-2 md:block md:p-0
+            "
+          >
+            <div 
+              className="
+                w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 p-5 animate-scaleIn pointer-events-auto
+                md:w-80
+              "
+              onClick={(e) => e.stopPropagation()} 
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-teal dark:text-white font-poppins flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-mint" /> Filtrar Transações
+                </h3>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 transition-colors"
                 >
-                  <option value="all">Todos</option>
-                  <option value="paid">Pago / Recebido</option>
-                  <option value="pending">Pendente</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Categoria</label>
-                <select
-                  value={initialFilters.category}
-                  onChange={(e) => handleChange('category', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm text-teal dark:text-white focus:outline-none focus:ring-2 focus:ring-mint"
-                >
-                  <option value="all">Todas as categorias</option>
-                  {categories.map((cat, index) => (
-                    <option key={cat.value || index} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Período</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={initialFilters.startDate}
-                      onChange={(e) => handleChange('startDate', e.target.value)}
-                      className="w-full px-2 py-2 pl-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-xs text-teal dark:text-white focus:outline-none focus:ring-2 focus:ring-mint"
-                    />
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={initialFilters.endDate}
-                      onChange={(e) => handleChange('endDate', e.target.value)}
-                      className="w-full px-2 py-2 pl-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-xs text-teal dark:text-white focus:outline-none focus:ring-2 focus:ring-mint"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {hasActiveFilters && (
-                <button
-                  onClick={() => onFilter({
-                    type: 'all',
-                    category: 'all',
-                    status: 'all',
-                    startDate: '',
-                    endDate: '',
-                    minAmount: '',
-                    maxAmount: ''
-                  })}
-                  className="w-full py-3 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors border border-red-100 dark:border-red-900/30 mt-2"
-                >
-                  Limpar Todos os Filtros
+                  <X className="w-5 h-5" />
                 </button>
-              )}
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Tipo</label>
+                  <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                    {[
+                      { val: 'all', label: 'Todos' },
+                      { val: 'income', label: 'Receitas' },
+                      { val: 'expense', label: 'Despesas' }
+                    ].map(opt => (
+                      <button
+                        key={opt.val}
+                        onClick={() => handleChange('type', opt.val)}
+                        className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
+                          initialFilters.type === opt.val
+                            ? 'bg-white dark:bg-gray-600 text-teal dark:text-white shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Status</label>
+                  <select
+                    value={initialFilters.status}
+                    onChange={(e) => handleChange('status', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm text-teal dark:text-white focus:outline-none focus:ring-2 focus:ring-mint"
+                  >
+                    <option value="all">Todos</option>
+                    <option value="paid">Pago / Recebido</option>
+                    <option value="pending">Pendente</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Categoria</label>
+                  <select
+                    value={initialFilters.category}
+                    onChange={(e) => handleChange('category', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm text-teal dark:text-white focus:outline-none focus:ring-2 focus:ring-mint"
+                  >
+                    <option value="all">Todas as categorias</option>
+                    {categories.map((cat, index) => (
+                      <option key={cat.value || index} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Período</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <input
+                        type="date"
+                        value={initialFilters.startDate}
+                        onChange={(e) => handleChange('startDate', e.target.value)}
+                        className="w-full px-2 py-2 pl-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-xs text-teal dark:text-white focus:outline-none focus:ring-2 focus:ring-mint"
+                      />
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        value={initialFilters.endDate}
+                        onChange={(e) => handleChange('endDate', e.target.value)}
+                        className="w-full px-2 py-2 pl-2 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-xs text-teal dark:text-white focus:outline-none focus:ring-2 focus:ring-mint"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => onFilter({
+                      type: 'all',
+                      category: 'all',
+                      status: 'all',
+                      startDate: '',
+                      endDate: '',
+                      minAmount: '',
+                      maxAmount: ''
+                    })}
+                    className="w-full py-3 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors border border-red-100 dark:border-red-900/30 mt-2"
+                  >
+                    Limpar Todos os Filtros
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </>

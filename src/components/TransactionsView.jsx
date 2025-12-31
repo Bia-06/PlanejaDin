@@ -17,11 +17,10 @@ const TransactionsView = ({
   openModal, 
   handleToggleStatus, 
   handleDelete,
-  handleBatchDelete // <--- Recebendo a função de delete em massa
+  handleBatchDelete 
 }) => {
   const today = getLocalDateString();
   
-  // --- Estado de Seleção ---
   const [selectedIds, setSelectedIds] = useState([]);
 
   const getFilteredTransactions = () => {
@@ -29,7 +28,12 @@ const TransactionsView = ({
       if (filters.type !== 'all' && transaction.type !== filters.type) return false;
       if (filters.category !== 'all' && transaction.category !== filters.category) return false;
       if (filters.status !== 'all' && transaction.status !== filters.status) return false;
+      
+      if (filters.startDate && transaction.date < filters.startDate) return false;
+      if (filters.endDate && transaction.date > filters.endDate) return false;
+
       if (searchTerm && !transaction.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      
       return true;
     });
   };
@@ -37,7 +41,6 @@ const TransactionsView = ({
   const filteredTransactions = getFilteredTransactions();
   const hasActiveFilters = Object.keys(filters).some(key => filters[key] && filters[key] !== 'all' && filters[key] !== '');
 
-  // Lógica para Selecionar Um
   const toggleSelect = (id) => {
     if (selectedIds.includes(id)) {
         setSelectedIds(selectedIds.filter(itemId => itemId !== id));
@@ -46,20 +49,18 @@ const TransactionsView = ({
     }
   };
 
-  // Lógica para Selecionar Todos (Visíveis)
   const toggleSelectAll = () => {
     if (selectedIds.length === filteredTransactions.length && filteredTransactions.length > 0) {
-        setSelectedIds([]); // Desmarcar tudo
+        setSelectedIds([]); 
     } else {
-        setSelectedIds(filteredTransactions.map(t => t.id)); // Marcar todos visíveis
+        setSelectedIds(filteredTransactions.map(t => t.id)); 
     }
   };
 
-  // Executar exclusão e limpar seleção
   const onBatchDeleteClick = async () => {
      if(selectedIds.length === 0) return;
      await handleBatchDelete(selectedIds);
-     setSelectedIds([]); // Limpa seleção após deletar
+     setSelectedIds([]); 
   };
 
   return (
@@ -74,24 +75,22 @@ const TransactionsView = ({
           )}
         </h2>
         
-        {/* Barra de Ações (Muda se tiver itens selecionados) */}
-{selectedIds.length > 0 ? (
-   <div className="flex items-center gap-2 animate-fadeIn">
-      <Button 
-        onClick={onBatchDeleteClick} 
-        // AQUI ESTÁ A MUDANÇA: Fundo vermelho forte, texto branco e sombra
-        className="bg-red-600 text-white hover:bg-red-700 shadow-md border-transparent px-4 py-2 text-sm flex items-center gap-2 font-bold"
-      >
-         <Trash2 className="w-4 h-4" /> Apagar Selecionados
-      </Button>
-      <button 
-        onClick={() => setSelectedIds([])} 
-        className="text-gray-400 hover:text-gray-600 p-2"
-      >
-        <X className="w-5 h-5" />
-      </button>
-   </div>
-) : (
+        {selectedIds.length > 0 ? (
+           <div className="flex items-center gap-2 animate-fadeIn">
+              <Button 
+                onClick={onBatchDeleteClick} 
+                className="bg-red-600 text-white hover:bg-red-700 shadow-md border-transparent px-4 py-2 text-sm flex items-center gap-2 font-bold"
+              >
+                 <Trash2 className="w-4 h-4" /> Apagar Selecionados
+              </Button>
+              <button 
+                onClick={() => setSelectedIds([])} 
+                className="text-gray-400 hover:text-gray-600 p-2"
+              >
+                <X className="w-5 h-5" />
+              </button>
+           </div>
+        ) : (
             <div className="flex flex-col md:flex-row gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -124,7 +123,6 @@ const TransactionsView = ({
         </div>
       )}
 
-      {/* Checkbox Selecionar Todos (Só aparece se houver lista) */}
       {filteredTransactions.length > 0 && (
           <div className="mb-4 flex items-center gap-3 px-2">
              <input 
@@ -159,7 +157,6 @@ const TransactionsView = ({
               >
                 
                 <div className="flex items-center gap-4 md:gap-5 w-full md:w-auto">
-                  {/* Checkbox Individual */}
                   <div className="flex items-center justify-center">
                     <input 
                         type="checkbox" 
@@ -224,7 +221,6 @@ const TransactionsView = ({
                       )}
                     </button>
                     
-                    {/* Botão de Editar */}
                     <button 
                       onClick={() => openModal('transaction', item.type, item)} 
                       className="p-2 text-gray-400 hover:text-teal transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"

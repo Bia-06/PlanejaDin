@@ -34,9 +34,8 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  // --- ESTADOS PARA EDIÇÃO ---
   const [editingId, setEditingId] = useState(null);
-  const [editScope, setEditScope] = useState('single'); // 'single' ou 'all'
+  const [editScope, setEditScope] = useState('single'); 
 
   const DEBUG_MODE = false; 
   let user = authUser;
@@ -62,7 +61,6 @@ export default function App() {
     }
   };
 
-  // --- Funções do Banco de Dados ---
   const { 
     transactions, 
     reminders, 
@@ -72,7 +70,7 @@ export default function App() {
     updateTransaction,      
     updateTransactionGroup, 
     deleteTransaction,
-    deleteTransactions, // <--- Importado a nova função
+    deleteTransactions, 
     updateTransactionStatus,
     addReminder,
     deleteReminder,
@@ -94,16 +92,37 @@ export default function App() {
   const [filters, setFilters] = useState({ type: 'all', category: 'all', status: 'all', startDate: '', endDate: '', minAmount: '', maxAmount: '' });
 
   const todayStr = getLocalDateString();
-  const summary = {
-    income: transactions.filter(t => t.type === 'income' && t.status === 'paid').reduce((acc, curr) => acc + curr.amount, 0),
-    expense: transactions.filter(t => t.type === 'expense' && t.status === 'paid').reduce((acc, curr) => acc + curr.amount, 0),
-    balance: 0,
-    pendingBills: transactions.filter(t => t.type === 'expense' && t.status === 'pending' && t.date <= todayStr).reduce((acc, curr) => acc + curr.amount, 0)
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1; 
+  const currentYear = now.getFullYear();
+
+  const isCurrentMonth = (dateString) => {
+    if (!dateString) return false;
+    const [year, month] = dateString.split('-').map(Number);
+    return year === currentYear && month === currentMonth;
   };
+
+  const summary = {
+
+    income: transactions
+      .filter(t => t.type === 'income' && t.status === 'paid' && isCurrentMonth(t.date))
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    
+    expense: transactions
+      .filter(t => t.type === 'expense' && t.status === 'paid' && isCurrentMonth(t.date))
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    
+    balance: 0,
+    
+    pendingBills: transactions
+      .filter(t => t.type === 'expense' && t.status === 'pending' && t.date <= todayStr)
+      .reduce((acc, curr) => acc + curr.amount, 0)
+  };
+  
   summary.balance = summary.income - summary.expense;
 
   const getChartData = () => {
-    const expenses = transactions.filter(t => t.type === 'expense');
+    const expenses = transactions.filter(t => t.type === 'expense' && isCurrentMonth(t.date));
     const totalsByCategory = expenses.reduce((acc, curr) => {
       const cat = curr.category || 'Outros';
       acc[cat] = (acc[cat] || 0) + curr.amount;
@@ -117,7 +136,6 @@ export default function App() {
   };
   const chartDataArray = getChartData();
 
-  // --- OPEN MODAL (Com correção do bug de valor) ---
   const openModal = (type, subType = 'expense', dataToEdit = null) => {
     setModalType(type);
     setEditScope('single'); 
@@ -126,11 +144,9 @@ export default function App() {
       setTransactionType(subType);
       
       if (dataToEdit) {
-        // MODO EDIÇÃO
         setEditingId(dataToEdit.id);
         setForm({
           description: dataToEdit.description,
-          // Garante formatação correta do valor na edição
           amount: Number(dataToEdit.amount).toFixed(2).replace('.', ','),
           type: dataToEdit.type,
           category: dataToEdit.category || 'Outros',
@@ -141,7 +157,6 @@ export default function App() {
           group_id: dataToEdit.group_id 
         });
       } else {
-        // MODO CRIAÇÃO
         setEditingId(null);
         setForm({
             description: '', amount: '', type: subType, category: 'Outros', 
@@ -160,7 +175,6 @@ export default function App() {
     setEditingId(null);
   };
 
-  // --- SAVE TRANSACTION ---
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
     if (!form.description.trim() || !form.amount) return;
@@ -168,7 +182,6 @@ export default function App() {
     const baseAmount = parseCommaValue(form.amount);
 
     try {
-      // 1. EDIÇÃO
       if (editingId) {
         if (editScope === 'all' && form.group_id) {
             await updateTransactionGroup(form.group_id, {
@@ -188,7 +201,6 @@ export default function App() {
             });
         }
       } 
-      // 2. CRIAÇÃO
       else {
         let loopCount = 1;
         if (form.recurrence === 'fixed') loopCount = 12;
@@ -238,7 +250,6 @@ export default function App() {
     }
   };
 
-  // --- NOVO: Função para confirmar deleção em massa ---
   const handleBatchDelete = async (ids) => {
     if (window.confirm(`Tem certeza que deseja excluir ${ids.length} itens selecionados?`)) {
         await deleteTransactions(ids);
@@ -262,7 +273,6 @@ export default function App() {
     switch (view) {
       case 'dashboard': return <DashboardView user={user} summary={summary} chartData={chartDataArray} reminders={reminders} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} openModal={openModal} setView={setView} />;
       case 'transactions': 
-        // Passando a nova prop handleBatchDelete
         return <TransactionsView transactions={transactions} filters={filters} setFilters={setFilters} searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryOptions={categoryOptions} openModal={openModal} handleToggleStatus={handleToggleStatus} handleDelete={handleDelete} handleBatchDelete={handleBatchDelete} />;
       case 'reports': return <ReportsView transactions={transactions} />;
       case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} />;
@@ -294,7 +304,6 @@ export default function App() {
       
       <div className="flex flex-col md:flex-row h-full overflow-hidden">
         
-        {/* --- MOBILE HEADER --- */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 shrink-0 z-20">
             <Logo size="small" />
             <div 
@@ -309,7 +318,6 @@ export default function App() {
             </div>
         </header>
 
-        {/* --- DESKTOP SIDEBAR --- */}
         <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm z-20">
           <div className="p-8 border-b border-gray-50 dark:border-gray-700">
             <Logo size="large" showSlogan={true} centered={true} className="mb-2" />
@@ -345,12 +353,10 @@ export default function App() {
           </div>
         </aside>
 
-        {/* --- MAIN CONTENT --- */}
         <main className="flex-1 overflow-y-auto relative bg-bgLight dark:bg-gray-900 pb-24 md:pb-0">
           <div className="max-w-5xl mx-auto p-4 md:p-10">{renderView()}</div>
         </main>
 
-        {/* --- MOBILE BOTTOM NAV --- */}
         <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center px-2 py-3 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
            {menuItems.slice(0, 5).map(item => (
               <button 
@@ -379,7 +385,6 @@ export default function App() {
 
       </div>
       
-      {/* Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'transaction' ? (editingId ? "Editar Transação" : (transactionType === 'income' ? "Nova Receita" : "Nova Despesa")) : "Novo Lembrete"}>
         {modalType === 'transaction' ? (
           <form onSubmit={handleSaveTransaction} className="space-y-3">

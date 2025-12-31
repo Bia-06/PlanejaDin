@@ -382,7 +382,7 @@ const SettingsView = ({
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.0.0 (Beta)</span></p>
-               <p className="flex justify-between"><span>Última Atualização:</span><span>30 Dez 2025</span></p>
+               <p className="flex justify-between"><span>Última Atualização:</span><span>31 Dez 2025</span></p>
               <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400">
                 Feito com 💜 por <a href="https://portfolio--beatriz.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-mint font-bold hover:underline transition-all">Beatriz Pires</a>
               </div>
