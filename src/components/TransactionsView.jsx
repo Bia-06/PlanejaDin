@@ -173,7 +173,17 @@ const TransactionsView = ({
                     <p className="font-bold text-teal dark:text-white text-lg truncate pr-2">{item.description}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-0.5 flex flex-wrap items-center gap-2">
                       <span className={isOverdue ? "text-red-500 font-bold" : ""}>{formatDate(item.date)}</span>
-                      <span className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs">{item.category}</span>
+                      
+                      {/* --- EXIBIÇÃO DA SUBCATEGORIA --- */}
+                      <span className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs flex items-center gap-1">
+                        {item.category}
+                        {item.subcategory && (
+                           <>
+                             <span className="text-gray-400">›</span>
+                             <span className="text-teal dark:text-mint">{item.subcategory}</span>
+                           </>
+                        )}
+                      </span>
                       
                       {item.status === 'pending' && !isOverdue && (
                         <span className="flex items-center gap-1 text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-800">

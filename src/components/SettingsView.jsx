@@ -14,6 +14,7 @@ const SettingsView = ({
   isDarkMode, 
   setIsDarkMode,
   addCategory,
+  updateCategory, // Recebendo a função update
   deleteCategory,
   onLogout 
 }) => {
@@ -26,6 +27,11 @@ const SettingsView = ({
   });
 
   const [newCategory, setNewCategory] = useState('');
+  
+  // Estados para gerenciar subcategorias
+  const [activeCategoryId, setActiveCategoryId] = useState(null);
+  const [newSubcat, setNewSubcat] = useState('');
+
   const [avatarPreview, setAvatarPreview] = useState(user?.user_metadata?.avatar_url || null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -103,6 +109,25 @@ const SettingsView = ({
     if (newCategory.trim()) {
       addCategory(newCategory.trim());
       setNewCategory('');
+    }
+  };
+
+  // --- Lógica de Subcategorias ---
+const handleAddSubcategory = async (category) => {
+    if (!newSubcat.trim()) return;
+    
+    // Garante que currentSubcats seja um array, mesmo se vier null do banco
+    const currentSubcats = Array.isArray(category.subcategories) ? category.subcategories : [];
+    const updatedSubcats = [...currentSubcats, newSubcat.trim()];
+
+    console.log("Tentando salvar:", updatedSubcats); // Para debug
+
+    const { error } = await updateCategory(category.id, { subcategories: updatedSubcats });
+    
+    if (error) {
+        alert("Erro ao salvar subcategoria: " + error.message);
+    } else {
+        setNewSubcat(''); // Limpa o input apenas se deu certo
     }
   };
 
@@ -268,16 +293,16 @@ const SettingsView = ({
               </div>
 
               <div>
-                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Telefone</label>
-                 <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Telefone</label>
+                  <div className="relative">
                   <Phone className="absolute left-4 top-3 w-5 h-5 text-gray-400 z-10" />
                   <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="(00) 00000-0000" style={inputStyle} maxLength={15} />
                 </div>
               </div>
 
               <div>
-                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Nova Senha</label>
-                 <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Nova Senha</label>
+                  <div className="relative">
                   <Lock className="absolute left-4 top-3 w-5 h-5 text-gray-400 z-10" />
                   <Input name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} placeholder="********" style={passwordInputStyle} />
                   <button type="button" className="absolute right-3 top-3 text-gray-400 hover:text-teal dark:hover:text-gray-300 z-10" onClick={() => setShowPassword(!showPassword)}>
@@ -287,8 +312,8 @@ const SettingsView = ({
               </div>
               
               <div>
-                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Confirmar Senha</label>
-                 <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1">Confirmar Senha</label>
+                  <div className="relative">
                   <Lock className="absolute left-4 top-3 w-5 h-5 text-gray-400 z-10" />
                   <Input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={formData.confirmPassword} onChange={handleChange} placeholder="********" style={passwordInputStyle} />
                   <button type="button" className="absolute right-3 top-3 text-gray-400 hover:text-teal dark:hover:text-gray-300 z-10" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
@@ -329,17 +354,66 @@ const SettingsView = ({
         <div className="space-y-6">
           <Card>
             <h3 className="font-bold text-lg text-teal dark:text-white mb-4 flex items-center gap-2 font-poppins">
-              <Tag className="w-5 h-5 text-mint" /> Categorias
+              <Tag className="w-5 h-5 text-mint" /> Gerenciar Categorias
             </h3>
+            
             <div className="flex gap-2 mb-4">
               <input className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-teal dark:text-white text-sm outline-none focus:ring-2 focus:ring-mint transition-all min-w-0" placeholder="Nova Categoria..." value={newCategory} onChange={(e) => setNewCategory(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()} />
               <button onClick={handleAddCategory} className="bg-mint text-white p-2 rounded-xl hover:bg-[#00b57a] transition-colors shrink-0"><Plus size={20}/></button>
             </div>
-            <div className="max-h-[200px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+
+            <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
               {categories.map(cat => (
-                <div key={cat.id} className="flex justify-between items-center p-3 bg-bgLight dark:bg-gray-700/50 rounded-xl group hover:bg-white dark:hover:bg-gray-700 border border-transparent hover:border-gray-100 dark:hover:border-gray-600 transition-all">
-                  <span className="text-sm font-medium text-teal dark:text-gray-300 truncate">{cat.name}</span>
-                  <button onClick={() => deleteCategory(cat.id)} className="text-gray-400 hover:text-red-500 transition-colors"><X size={16} /></button>
+                <div key={cat.id} className="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden bg-bgLight dark:bg-gray-700/50">
+                  <div className="flex justify-between items-center p-3">
+                    <span className="text-sm font-bold text-teal dark:text-gray-200 truncate">{cat.name}</span>
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => setActiveCategoryId(activeCategoryId === cat.id ? null : cat.id)}
+                            className={`p-1.5 rounded-lg transition-colors ${activeCategoryId === cat.id ? 'bg-mint text-white' : 'text-gray-400 hover:text-mint hover:bg-mint/10'}`}
+                            title="Gerenciar Subcategorias"
+                        >
+                            <Tag size={16} />
+                        </button>
+                        <button onClick={() => deleteCategory(cat.id)} className="text-gray-400 hover:text-red-500 p-1.5"><Trash2 size={16} /></button>
+                    </div>
+                  </div>
+
+                  {/* Área de Subcategorias */}
+                  {activeCategoryId === cat.id && (
+                     <div className="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 animate-fadeIn">
+                         <p className="text-xs text-gray-500 mb-2 font-medium">Subcategorias:</p>
+                         
+                         <div className="flex flex-wrap gap-2 mb-3">
+                             {cat.subcategories && cat.subcategories.map((sub, idx) => (
+                                 <span key={idx} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-md border border-gray-200 dark:border-gray-600">
+                                     {sub}
+                                     <button onClick={() => handleRemoveSubcategory(cat, sub)} className="hover:text-red-500 ml-1"><X className="w-3 h-3" /></button>
+                                 </span>
+                             ))}
+                             {(!cat.subcategories || cat.subcategories.length === 0) && (
+                                 <span className="text-xs text-gray-400 italic">Nenhuma subcategoria.</span>
+                             )}
+                         </div>
+
+                         <div className="flex gap-2">
+                             <input 
+                                 type="text" 
+                                 placeholder="Add sub..." 
+                                 className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-transparent dark:text-white focus:outline-none focus:border-mint"
+                                 value={newSubcat}
+                                 onChange={(e) => setNewSubcat(e.target.value)}
+                                 onKeyDown={(e) => e.key === 'Enter' && handleAddSubcategory(cat)}
+                             />
+                             <button 
+                                  onClick={() => handleAddSubcategory(cat)}
+                                  className="px-3 py-1 bg-mint text-white rounded-lg text-xs font-bold hover:bg-teal transition-colors"
+                             >
+                                 Add
+                             </button>
+                         </div>
+                     </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -382,7 +456,7 @@ const SettingsView = ({
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.0.0 (Beta)</span></p>
-               <p className="flex justify-between"><span>Última Atualização:</span><span>31 Dez 2025</span></p>
+               <p className="flex justify-between"><span>Última Atualização:</span><span>02 JAN 2026</span></p>
               <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400">
                 Feito com 💜 por <a href="https://portfolio--beatriz.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-mint font-bold hover:underline transition-all">Beatriz Pires</a>
               </div>

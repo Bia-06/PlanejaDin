@@ -41,7 +41,8 @@ export const useTransactions = (userId) => {
       if (!error && data && data.length > 0) {
         setCategories(data);
       } else {
-        setCategories(DEFAULT_CATEGORIES.map((cat, i) => ({ id: `def-${i}`, name: cat })));
+        // Garante que categorias padrão tenham array vazio para evitar erro
+        setCategories(DEFAULT_CATEGORIES.map((cat, i) => ({ id: `def-${i}`, name: cat, subcategories: [] })));
       }
     } catch (err) {
       console.error("Erro categorias:", err);
@@ -49,15 +50,66 @@ export const useTransactions = (userId) => {
   };
 
   const addCategory = async (name) => {
+    // Inicia com subcategories vazio
     const { data, error } = await supabase
       .from('categories')
-      .insert([{ name, user_id: userId }])
+      .insert([{ name, user_id: userId, subcategories: [] }])
       .select();
     
     if (!error) {
       setCategories(prev => [...prev, data[0]]);
     }
     return { error };
+  };
+
+  // --- NOVA FUNÇÃO PARA ATUALIZAR CATEGORIA (Salvar Subcategorias) ---
+// Substitua a função updateCategory antiga por esta nova:
+  const updateCategory = async (id, updates) => {
+    try {
+      // CENÁRIO 1: É uma categoria padrão (ex: def-0)?
+      // Se for, precisamos CRIAR ela no banco antes de adicionar a subcategoria
+      if (id.toString().startsWith('def-')) {
+         const categoryName = categories.find(c => c.id === id)?.name;
+         if (!categoryName) throw new Error("Categoria original não encontrada.");
+
+         // Insere no banco já com as subcategorias novas
+         const { data, error } = await supabase
+           .from('categories')
+           .insert([{ 
+              name: categoryName, 
+              user_id: userId, 
+              subcategories: updates.subcategories || [] 
+           }])
+           .select();
+
+         if (error) throw error;
+
+         // Atualiza a lista local trocando a "falsa" pela "nova real"
+         if (data) {
+            setCategories(prev => prev.map(c => c.id === id ? data[0] : c));
+         }
+         return { data, error: null };
+      }
+
+      // CENÁRIO 2: É uma categoria normal (já existe no banco)
+      const { data, error } = await supabase
+        .from('categories')
+        .update(updates)
+        .eq('id', id)
+        .select();
+      
+      if (error) throw error;
+
+      if (data) {
+          setCategories(prev => prev.map(c => c.id === id ? data[0] : c));
+      }
+      return { data, error: null };
+
+    } catch (error) {
+      console.error("Erro ao atualizar categoria:", error.message);
+      // Retornamos um objeto de erro padronizado para o front não dar "undefined"
+      return { data: null, error: { message: error.message || "Erro desconhecido" } };
+    }
   };
 
   const deleteCategory = async (id) => {
@@ -200,6 +252,7 @@ export const useTransactions = (userId) => {
     deleteReminder,
     addCategory,
     deleteCategory,
+    updateCategory, // Exportando a nova função
     fetchTransactions,
     fetchReminders,
     fetchCategories

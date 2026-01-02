@@ -36,7 +36,7 @@ export default function App() {
 
   // --- ESTADOS PARA EDIÇÃO ---
   const [editingId, setEditingId] = useState(null);
-  const [editScope, setEditScope] = useState('single'); // 'single' ou 'all'
+  const [editScope, setEditScope] = useState('single'); 
 
   const DEBUG_MODE = false; 
   let user = authUser;
@@ -75,9 +75,10 @@ export default function App() {
     deleteTransactions, 
     updateTransactionStatus,
     addReminder,
-    updateReminder, // Importante: agora esta função existe no hook!
+    updateReminder,
     deleteReminder,
     addCategory,
+    updateCategory, // Importado aqui
     deleteCategory
   } = useTransactions(user?.id);
 
@@ -86,10 +87,23 @@ export default function App() {
     label: cat.name
   }));
 
+  // Adicionado subcategory ao estado inicial
   const [form, setForm] = useState({
-    description: '', amount: '', type: 'expense', category: 'Outros', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2, group_id: null
+    description: '', amount: '', type: 'expense', category: 'Outros', subcategory: '', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2, group_id: null
   });
   
+  // Efeito para limpar subcategoria se a categoria mudar e não tiver subcategorias compatíveis
+  useEffect(() => {
+    const currentCatObj = categories.find(c => c.name === form.category);
+    
+    // Se a categoria tem subcategorias definidas, mas a selecionada não está entre elas, limpa
+    if (currentCatObj && form.subcategory) {
+        if (!currentCatObj.subcategories || !currentCatObj.subcategories.includes(form.subcategory)) {
+            setForm(prev => ({ ...prev, subcategory: '' }));
+        }
+    }
+  }, [form.category, categories]);
+
   const [formErrors, setFormErrors] = useState({});
   const [reminderForm, setReminderForm] = useState({ title: '', date: getLocalDateString(), details: '' });
   const [filters, setFilters] = useState({ type: 'all', category: 'all', status: 'all', startDate: '', endDate: '', minAmount: '', maxAmount: '' });
@@ -97,10 +111,9 @@ export default function App() {
   // --- CORREÇÃO DO SUMÁRIO (APENAS MÊS ATUAL) ---
   const todayStr = getLocalDateString();
   const now = new Date();
-  const currentMonth = now.getMonth() + 1; // 1 a 12
+  const currentMonth = now.getMonth() + 1; 
   const currentYear = now.getFullYear();
 
-  // Função auxiliar para verificar se a data é do mês atual
   const isCurrentMonth = (dateString) => {
     if (!dateString) return false;
     const [year, month] = dateString.split('-').map(Number);
@@ -155,6 +168,7 @@ export default function App() {
           amount: Number(dataToEdit.amount).toFixed(2).replace('.', ','),
           type: dataToEdit.type,
           category: dataToEdit.category || 'Outros',
+          subcategory: dataToEdit.subcategory || '', // Carrega a subcategoria
           date: dataToEdit.date,
           status: dataToEdit.status,
           recurrence: 'single', 
@@ -164,13 +178,12 @@ export default function App() {
       } else {
         setEditingId(null);
         setForm({
-            description: '', amount: '', type: subType, category: 'Outros', 
+            description: '', amount: '', type: subType, category: 'Outros', subcategory: '',
             date: getLocalDateString(), status: 'pending', recurrence: 'single', 
             installments: 2, group_id: null
         });
       }
     } 
-    // --- Lógica para Edição de Lembrete ---
     else if (type === 'reminder') {
         if (dataToEdit) {
             setEditingId(dataToEdit.id);
@@ -189,7 +202,7 @@ export default function App() {
   };
 
   const resetForms = () => {
-    setForm({ description: '', amount: '', type: 'expense', category: 'Outros', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2, group_id: null });
+    setForm({ description: '', amount: '', type: 'expense', category: 'Outros', subcategory: '', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2, group_id: null });
     setReminderForm({ title: '', date: getLocalDateString(), details: '' });
     setFormErrors({});
     setEditingId(null);
@@ -209,6 +222,7 @@ export default function App() {
                 amount: baseAmount,
                 type: form.type,
                 category: form.category,
+                subcategory: form.subcategory, // Salva subcategoria
             });
         } else {
             await updateTransaction(editingId, {
@@ -216,6 +230,7 @@ export default function App() {
                 amount: baseAmount,
                 type: form.type,
                 category: form.category,
+                subcategory: form.subcategory, // Salva subcategoria
                 date: form.date,
                 status: form.status
             });
@@ -242,7 +257,7 @@ export default function App() {
           const transactionAmount = form.recurrence === 'installment' ? parseFloat((baseAmount / loopCount).toFixed(2)) : baseAmount;
           
           await addTransaction({ 
-              description, amount: transactionAmount, type: form.type, category: form.category, 
+              description, amount: transactionAmount, type: form.type, category: form.category, subcategory: form.subcategory,
               date: dateString, status, user_id: user.id, 
               group_id: newGroupId 
           });
@@ -253,20 +268,17 @@ export default function App() {
     } catch (err) { console.error(err); } finally { setActionLoading(false); }
   };
 
-  // --- FUNÇÃO DE SALVAR/EDITAR LEMBRETE ---
   const handleAddReminder = async (e) => {
     e.preventDefault();
     setActionLoading(true);
     try {
       if (editingId) {
-          // Edição
           await updateReminder(editingId, { 
               title: reminderForm.title, 
               date: reminderForm.date, 
               details: reminderForm.details 
           });
       } else {
-          // Criação
           await addReminder({ 
               title: reminderForm.title, 
               date: reminderForm.date, 
@@ -312,7 +324,7 @@ export default function App() {
       case 'reports': return <ReportsView transactions={transactions} />;
       case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} />;
       case 'calendar': return <CalendarView transactions={transactions} reminders={reminders} />;
-      case 'settings': return <SettingsView user={user} categories={categories} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} addCategory={addCategory} deleteCategory={deleteCategory} onLogout={handleLogout} />;
+      case 'settings': return <SettingsView user={user} categories={categories} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} addCategory={addCategory} updateCategory={updateCategory} deleteCategory={deleteCategory} onLogout={handleLogout} />;
       default: return <DashboardView />;
     }
   };
@@ -453,10 +465,34 @@ export default function App() {
 
             <Input label="Descrição" placeholder={form.type === 'income' ? "Ex: Salário, Venda, Reembolso..." : "Ex: Aluguel, Mercado, Uber..."} value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} required />
             <Input label="Valor (R$)" type="text" placeholder="0,00" value={formatValueForInput(form.amount)} onChange={(e) => setForm({...form, amount: handleAmountInputChange(e.target.value)})} required />
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Select label="Categoria" value={form.category} onChange={(e) => setForm({...form, category: e.target.value})} options={categoryOptions} />
               <Input label="Data" type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} required />
             </div>
+
+            {/* --- LÓGICA DINÂMICA DE SUBCATEGORIA --- */}
+            {(() => {
+                const selectedCatData = categories.find(c => c.name === form.category);
+                const hasSubcats = selectedCatData && selectedCatData.subcategories && selectedCatData.subcategories.length > 0;
+                
+                if (hasSubcats) {
+                    return (
+                        <div className="animate-fadeIn">
+                            <Select 
+                                label="Detalhe (Subcategoria)" 
+                                value={form.subcategory} 
+                                onChange={(e) => setForm({...form, subcategory: e.target.value})} 
+                                options={[
+                                    { value: '', label: 'Selecione...' },
+                                    ...selectedCatData.subcategories.map(sub => ({ value: sub, label: sub }))
+                                ]} 
+                            />
+                        </div>
+                    );
+                }
+                return null;
+            })()}
 
             {!editingId && (
                 <div className="mt-1">
@@ -489,7 +525,7 @@ export default function App() {
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="editScope" value="all" checked={editScope === 'all'} onChange={() => setEditScope('all')} className="text-mint focus:ring-mint" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">recorrentes</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Fixa/Recorrente</span>
                     </label>
                     </div>
                 </div>
