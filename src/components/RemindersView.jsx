@@ -38,7 +38,6 @@ const RemindersView = ({ reminders = [], handleDelete, openModal }) => {
                 )}
               </div>
 
-              {/* Botões de Ação */}
               <div className="flex flex-col gap-2 shrink-0 ml-1">
                 <button 
                   onClick={() => openModal('reminder', null, rem)} 

@@ -34,7 +34,6 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  // --- ESTADOS PARA EDIÇÃO ---
   const [editingId, setEditingId] = useState(null);
   const [editScope, setEditScope] = useState('single'); 
 
@@ -62,7 +61,6 @@ export default function App() {
     }
   };
 
-  // --- Funções do Banco de Dados ---
   const { 
     transactions, 
     reminders, 
@@ -78,7 +76,7 @@ export default function App() {
     updateReminder,
     deleteReminder,
     addCategory,
-    updateCategory, // Importado aqui
+    updateCategory, 
     deleteCategory
   } = useTransactions(user?.id);
 
@@ -87,16 +85,13 @@ export default function App() {
     label: cat.name
   }));
 
-  // Adicionado subcategory ao estado inicial
   const [form, setForm] = useState({
     description: '', amount: '', type: 'expense', category: 'Outros', subcategory: '', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2, group_id: null
   });
   
-  // Efeito para limpar subcategoria se a categoria mudar e não tiver subcategorias compatíveis
   useEffect(() => {
     const currentCatObj = categories.find(c => c.name === form.category);
     
-    // Se a categoria tem subcategorias definidas, mas a selecionada não está entre elas, limpa
     if (currentCatObj && form.subcategory) {
         if (!currentCatObj.subcategories || !currentCatObj.subcategories.includes(form.subcategory)) {
             setForm(prev => ({ ...prev, subcategory: '' }));
@@ -108,7 +103,6 @@ export default function App() {
   const [reminderForm, setReminderForm] = useState({ title: '', date: getLocalDateString(), details: '' });
   const [filters, setFilters] = useState({ type: 'all', category: 'all', status: 'all', startDate: '', endDate: '', minAmount: '', maxAmount: '' });
 
-  // --- CORREÇÃO DO SUMÁRIO (APENAS MÊS ATUAL) ---
   const todayStr = getLocalDateString();
   const now = new Date();
   const currentMonth = now.getMonth() + 1; 
@@ -153,7 +147,6 @@ export default function App() {
   };
   const chartDataArray = getChartData();
 
-  // --- OPEN MODAL ATUALIZADO ---
   const openModal = (type, subType = 'expense', dataToEdit = null) => {
     setModalType(type);
     setEditScope('single'); 
@@ -168,7 +161,7 @@ export default function App() {
           amount: Number(dataToEdit.amount).toFixed(2).replace('.', ','),
           type: dataToEdit.type,
           category: dataToEdit.category || 'Outros',
-          subcategory: dataToEdit.subcategory || '', // Carrega a subcategoria
+          subcategory: dataToEdit.subcategory || '',
           date: dataToEdit.date,
           status: dataToEdit.status,
           recurrence: 'single', 
@@ -222,7 +215,7 @@ export default function App() {
                 amount: baseAmount,
                 type: form.type,
                 category: form.category,
-                subcategory: form.subcategory, // Salva subcategoria
+                subcategory: form.subcategory, 
             });
         } else {
             await updateTransaction(editingId, {
@@ -230,7 +223,7 @@ export default function App() {
                 amount: baseAmount,
                 type: form.type,
                 category: form.category,
-                subcategory: form.subcategory, // Salva subcategoria
+                subcategory: form.subcategory,
                 date: form.date,
                 status: form.status
             });
@@ -471,7 +464,6 @@ export default function App() {
               <Input label="Data" type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} required />
             </div>
 
-            {/* --- LÓGICA DINÂMICA DE SUBCATEGORIA --- */}
             {(() => {
                 const selectedCatData = categories.find(c => c.name === form.category);
                 const hasSubcats = selectedCatData && selectedCatData.subcategories && selectedCatData.subcategories.length > 0;

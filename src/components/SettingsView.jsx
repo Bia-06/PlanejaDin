@@ -14,7 +14,7 @@ const SettingsView = ({
   isDarkMode, 
   setIsDarkMode,
   addCategory,
-  updateCategory, // Recebendo a função update
+  updateCategory, 
   deleteCategory,
   onLogout 
 }) => {
@@ -28,7 +28,6 @@ const SettingsView = ({
 
   const [newCategory, setNewCategory] = useState('');
   
-  // Estados para gerenciar subcategorias
   const [activeCategoryId, setActiveCategoryId] = useState(null);
   const [newSubcat, setNewSubcat] = useState('');
 
@@ -112,22 +111,20 @@ const SettingsView = ({
     }
   };
 
-  // --- Lógica de Subcategorias ---
 const handleAddSubcategory = async (category) => {
     if (!newSubcat.trim()) return;
     
-    // Garante que currentSubcats seja um array, mesmo se vier null do banco
     const currentSubcats = Array.isArray(category.subcategories) ? category.subcategories : [];
     const updatedSubcats = [...currentSubcats, newSubcat.trim()];
 
-    console.log("Tentando salvar:", updatedSubcats); // Para debug
+    console.log("Tentando salvar:", updatedSubcats); 
 
     const { error } = await updateCategory(category.id, { subcategories: updatedSubcats });
     
     if (error) {
         alert("Erro ao salvar subcategoria: " + error.message);
     } else {
-        setNewSubcat(''); // Limpa o input apenas se deu certo
+        setNewSubcat(''); 
     }
   };
 
@@ -379,7 +376,6 @@ const handleAddSubcategory = async (category) => {
                     </div>
                   </div>
 
-                  {/* Área de Subcategorias */}
                   {activeCategoryId === cat.id && (
                      <div className="p-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 animate-fadeIn">
                          <p className="text-xs text-gray-500 mb-2 font-medium">Subcategorias:</p>

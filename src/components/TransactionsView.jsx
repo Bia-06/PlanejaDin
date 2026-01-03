@@ -174,7 +174,6 @@ const TransactionsView = ({
                     <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-0.5 flex flex-wrap items-center gap-2">
                       <span className={isOverdue ? "text-red-500 font-bold" : ""}>{formatDate(item.date)}</span>
                       
-                      {/* --- EXIBIÇÃO DA SUBCATEGORIA --- */}
                       <span className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs flex items-center gap-1">
                         {item.category}
                         {item.subcategory && (

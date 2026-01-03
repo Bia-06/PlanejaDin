@@ -41,7 +41,6 @@ export const useTransactions = (userId) => {
       if (!error && data && data.length > 0) {
         setCategories(data);
       } else {
-        // Garante que categorias padrão tenham array vazio para evitar erro
         setCategories(DEFAULT_CATEGORIES.map((cat, i) => ({ id: `def-${i}`, name: cat, subcategories: [] })));
       }
     } catch (err) {
@@ -50,7 +49,6 @@ export const useTransactions = (userId) => {
   };
 
   const addCategory = async (name) => {
-    // Inicia com subcategories vazio
     const { data, error } = await supabase
       .from('categories')
       .insert([{ name, user_id: userId, subcategories: [] }])
@@ -62,17 +60,12 @@ export const useTransactions = (userId) => {
     return { error };
   };
 
-  // --- NOVA FUNÇÃO PARA ATUALIZAR CATEGORIA (Salvar Subcategorias) ---
-// Substitua a função updateCategory antiga por esta nova:
   const updateCategory = async (id, updates) => {
     try {
-      // CENÁRIO 1: É uma categoria padrão (ex: def-0)?
-      // Se for, precisamos CRIAR ela no banco antes de adicionar a subcategoria
       if (id.toString().startsWith('def-')) {
          const categoryName = categories.find(c => c.id === id)?.name;
          if (!categoryName) throw new Error("Categoria original não encontrada.");
 
-         // Insere no banco já com as subcategorias novas
          const { data, error } = await supabase
            .from('categories')
            .insert([{ 
@@ -84,14 +77,12 @@ export const useTransactions = (userId) => {
 
          if (error) throw error;
 
-         // Atualiza a lista local trocando a "falsa" pela "nova real"
          if (data) {
             setCategories(prev => prev.map(c => c.id === id ? data[0] : c));
          }
          return { data, error: null };
       }
 
-      // CENÁRIO 2: É uma categoria normal (já existe no banco)
       const { data, error } = await supabase
         .from('categories')
         .update(updates)
@@ -107,7 +98,6 @@ export const useTransactions = (userId) => {
 
     } catch (error) {
       console.error("Erro ao atualizar categoria:", error.message);
-      // Retornamos um objeto de erro padronizado para o front não dar "undefined"
       return { data: null, error: { message: error.message || "Erro desconhecido" } };
     }
   };
@@ -252,7 +242,7 @@ export const useTransactions = (userId) => {
     deleteReminder,
     addCategory,
     deleteCategory,
-    updateCategory, // Exportando a nova função
+    updateCategory, 
     fetchTransactions,
     fetchReminders,
     fetchCategories

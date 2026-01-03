@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   ChevronLeft, ChevronRight, CalendarIcon, CheckCircle, 
-  Clock, AlertCircle, Star 
+  Clock, AlertCircle, Star, PieChart
 } from 'lucide-react';
 import Card from './UI/Card';
 import { formatDate, formatCurrency } from '../utils/formatters';
@@ -79,6 +79,31 @@ const CalendarView = ({ transactions = [], reminders = [] }) => {
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const selectedDayEvents = getEventsForSelectedDay(selectedDay);
 
+  // --- NOVA LÓGICA DE AGRUPAMENTO ---
+  // Calcula o resumo por categoria apenas para o dia selecionado
+  const categorySummary = useMemo(() => {
+    const summary = {};
+    
+    selectedDayEvents.transactions.forEach(t => {
+      const catName = t.category || 'Outros';
+      
+      if (!summary[catName]) {
+        summary[catName] = {
+          name: catName,
+          total: 0,
+          type: t.type, // Assume o tipo da primeira transação (geralmente categorias são fixas como Despesa ou Receita)
+          count: 0
+        };
+      }
+      
+      summary[catName].total += Number(t.amount);
+      summary[catName].count += 1;
+    });
+
+    // Transforma em array e ordena do maior valor para o menor
+    return Object.values(summary).sort((a, b) => b.total - a.total);
+  }, [selectedDayEvents.transactions]);
+
   return (
     <div className="animate-fadeIn pb-24 font-inter">
       <div className="flex flex-col md:flex-row items-center justify-between mb-6 md:mb-8 gap-4">
@@ -154,7 +179,7 @@ const CalendarView = ({ transactions = [], reminders = [] }) => {
                   <button
                     key={day}
                     onClick={() => setSelectedDay(day)}
-                   
+                    
                     className={`min-h-[60px] md:min-h-[100px] rounded-lg flex flex-col items-center md:items-start justify-start p-1 md:p-2 transition-all border
                       ${isToday ? 'border-mint ring-1 ring-mint bg-mint/5' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}
                       ${isSelected ? 'ring-2 ring-teal border-teal z-10 shadow-md' : 'hover:border-teal/50 hover:shadow-sm'}
@@ -267,37 +292,29 @@ const CalendarView = ({ transactions = [], reminders = [] }) => {
             
             <div className="mb-6">
               <h4 className="font-bold text-teal dark:text-white mb-3 flex items-center gap-2 text-sm">
-                <span>Transações</span>
+                <span>Totais por Categoria</span>
                 <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">
-                  {selectedDayEvents.transactions.length}
+                  {categorySummary.length}
                 </span>
               </h4>
               
               <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                {selectedDayEvents.transactions.length > 0 ? (
-                  selectedDayEvents.transactions.map((t) => (
-                    <div key={t.id} className="flex items-center justify-between p-2.5 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
+                {categorySummary.length > 0 ? (
+                  categorySummary.map((cat) => (
+                    <div key={cat.name} className="flex items-center justify-between p-2.5 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
                       <div className="flex items-center gap-3">
-                        <div className={`p-1.5 rounded-lg ${t.type === 'income' ? 'bg-mint/10' : 'bg-red-50 dark:bg-red-900/20'}`}>
-                          {t.type === 'income' ? (
-                            <span className="text-mint font-bold text-xs">+</span>
-                          ) : (
-                            <span className="text-red-500 font-bold text-xs">-</span>
-                          )}
+                        <div className={`p-1.5 rounded-lg ${cat.type === 'income' ? 'bg-mint/10' : 'bg-red-50 dark:bg-red-900/20'}`}>
+                          <PieChart size={14} className={cat.type === 'income' ? 'text-mint' : 'text-red-500'} />
                         </div>
                         <div>
-                          <p className="font-medium text-teal dark:text-white text-xs">{t.description}</p>
-                          <p className="text-[10px] text-gray-500 flex items-center gap-1">
-                            {t.status === 'paid' ? (
-                              <span className="flex items-center gap-0.5 text-mint"><CheckCircle size={10} /> Pago</span>
-                            ) : (
-                              <span className="flex items-center gap-0.5 text-yellow-600"><Clock size={10} /> Pendente</span>
-                            )}
+                          <p className="font-medium text-teal dark:text-white text-xs">{cat.name}</p>
+                          <p className="text-[10px] text-gray-500">
+                            {cat.count} {cat.count === 1 ? 'item' : 'itens'}
                           </p>
                         </div>
                       </div>
-                      <span className={`font-bold text-xs ${t.type === 'income' ? 'text-mint' : 'text-red-500'}`}>
-                        {formatCurrency(t.amount)}
+                      <span className={`font-bold text-xs ${cat.type === 'income' ? 'text-mint' : 'text-red-500'}`}>
+                        {formatCurrency(cat.total)}
                       </span>
                     </div>
                   ))

@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import Card from './UI/Card';
 import Button from './UI/Button';
-import { formatCurrency, getLocalDateString } from '../utils/formatters';
+import { formatCurrency } from '../utils/formatters';
 import { THEME, CHART_COLORS } from '../config/constants';
 
 const ReportsView = ({ transactions = [] }) => {
@@ -143,7 +143,7 @@ const ReportsView = ({ transactions = [] }) => {
     if (active && payload && payload.length) {
       const displayLabel = payload[0]?.payload?.displayDate || label;
       return (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50">
           <p className="font-bold text-teal dark:text-white mb-2">{displayLabel}</p>
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center justify-between mb-1 gap-4">
@@ -164,7 +164,7 @@ const ReportsView = ({ transactions = [] }) => {
     if (active && payload && payload.length) {
       const percentage = totalExpensesCat > 0 ? ((payload[0].value / totalExpensesCat) * 100).toFixed(1) : 0;
       return (
-        <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50">
           <p className="font-bold text-teal dark:text-white">{payload[0].name}</p>
           <p className="text-lg font-bold" style={{ color: payload[0].payload.color }}>
             {formatCurrency(payload[0].value)}
