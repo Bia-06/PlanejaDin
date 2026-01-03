@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'PlanejaDin - Finanças',
-        short_name: 'PlanejaDin',
-        description: 'Gerencie suas finanças de forma simples e minimalista.',
+        name: 'GerenciaDin - Controle financeiro pessoal',
+        short_name: 'GerenciaDin',
+        description: 'A forma inteligente de cuidar do seu dinheiro',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
@@ -20,12 +20,12 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: '/pwa-192x192.png',
+            src: '/pwa192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/pwa.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
