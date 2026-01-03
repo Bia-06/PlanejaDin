@@ -20,15 +20,22 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: '/pwa192.png',
+            src: '/pwa-192x192.png', // Corrigido para o nome padrão
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any' // Importante para desktop
           },
           {
-            src: '/pwa.png',
+            src: '/pwa-512x512.png', // Corrigido para o nome padrão
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any' // Versão para desktop/Windows
+          },
+          {
+            src: '/pwa-512x512.png', 
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable' // Versão recortável para Android
           }
         ]
       }
