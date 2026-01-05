@@ -274,7 +274,7 @@ const AuthScreen = ({ onLogin }) => {
               </div>
             </>
           )}
-          <div className="text-center text-[9px] text-gray-300 dark:text-gray-600 mt-4 pb-4 lg:pb-0">© 2025 GerenciaDin. Todos os direitos reservados.</div>
+          <div className="text-center text-[9px] text-gray-300 dark:text-gray-600 mt-4 pb-4 lg:pb-0">© 2026 GerenciaDin. Todos os direitos reservados.</div>
         </div>
       </div>
     </div>

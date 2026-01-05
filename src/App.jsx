@@ -12,11 +12,12 @@ import Input from './components/UI/Input';
 import Select from './components/UI/Select';
 import Button from './components/UI/Button';
 import Logo from './components/UI/Logo';
+import LandingPage from './components/LandingPage';
 
 import { useTransactions } from './hooks/useTransactions';
 
 import { 
-  LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Repeat, Layers 
+  LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Repeat, Layers, ArrowLeft
 } from 'lucide-react';
 
 import { 
@@ -25,9 +26,12 @@ import {
 } from './utils/formatters';
 
 export default function App() {
+
+  const [showAuthScreen, setShowAuthScreen] = useState(false);
   const { user: authUser, loading: authLoading, signOut } = useAuth();
   const [view, setView] = useState('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('transaction');
   const [transactionType, setTransactionType] = useState('expense');
@@ -36,7 +40,7 @@ export default function App() {
 
   const [editingId, setEditingId] = useState(null);
   const [editScope, setEditScope] = useState('single'); 
-
+ 
   const DEBUG_MODE = false; 
   let user = authUser;
   let loading = authLoading;
@@ -50,22 +54,10 @@ export default function App() {
     loading = false;
   }
 
-  const handleLogout = async () => {
-    try {
-      if (signOut && typeof signOut === 'function') {
-        await signOut();
-        console.log('Logout realizado com sucesso');
-      }
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    }
-  };
-
   const { 
     transactions, 
     reminders, 
     categories, 
-    loading: dataLoading, 
     addTransaction,
     updateTransaction,      
     updateTransactionGroup, 
@@ -80,28 +72,44 @@ export default function App() {
     deleteCategory
   } = useTransactions(user?.id);
 
-  const categoryOptions = categories.map(cat => ({
-    value: cat.name,
-    label: cat.name
-  }));
-
   const [form, setForm] = useState({
     description: '', amount: '', type: 'expense', category: 'Outros', subcategory: '', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2, group_id: null
   });
-  
+
+  const [formErrors, setFormErrors] = useState({});
+  const [reminderForm, setReminderForm] = useState({ title: '', date: getLocalDateString(), details: '' });
+  const [filters, setFilters] = useState({ type: 'all', category: 'all', status: 'all', startDate: '', endDate: '', minAmount: '', maxAmount: '' });
+
   useEffect(() => {
     const currentCatObj = categories.find(c => c.name === form.category);
-    
     if (currentCatObj && form.subcategory) {
         if (!currentCatObj.subcategories || !currentCatObj.subcategories.includes(form.subcategory)) {
             setForm(prev => ({ ...prev, subcategory: '' }));
         }
     }
-  }, [form.category, categories]);
+  }, [form.category, categories, form.subcategory]);
 
-  const [formErrors, setFormErrors] = useState({});
-  const [reminderForm, setReminderForm] = useState({ title: '', date: getLocalDateString(), details: '' });
-  const [filters, setFilters] = useState({ type: 'all', category: 'all', status: 'all', startDate: '', endDate: '', minAmount: '', maxAmount: '' });
+  useEffect(() => {
+    if (isDarkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  }, [isDarkMode]);
+
+  const handleLogout = async () => {
+    try {
+      if (signOut && typeof signOut === 'function') {
+        await signOut();
+        setShowAuthScreen(false);
+        console.log('Logout realizado com sucesso');
+      }
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
+  const categoryOptions = categories.map(cat => ({
+    value: cat.name,
+    label: cat.name
+  }));
 
   const todayStr = getLocalDateString();
   const now = new Date();
@@ -129,7 +137,6 @@ export default function App() {
       .filter(t => t.type === 'expense' && t.status === 'pending' && t.date <= todayStr)
       .reduce((acc, curr) => acc + curr.amount, 0)
   };
-  
   summary.balance = summary.income - summary.expense;
 
   const getChartData = () => {
@@ -301,14 +308,6 @@ export default function App() {
     await updateTransactionStatus(item.id, newStatus);
   };
 
-  useEffect(() => {
-    if (isDarkMode) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }, [isDarkMode]);
-
-  if (loading) return <div className="h-screen flex items-center justify-center bg-bgLight dark:bg-gray-900"><div className="animate-spin w-10 h-10 border-4 border-mint border-t-transparent rounded-full"></div></div>;
-  if (!user && !DEBUG_MODE) return <AuthScreen onLogin={() => {}} />;
-
   const renderView = () => {
     switch (view) {
       case 'dashboard': return <DashboardView user={user} summary={summary} chartData={chartDataArray} reminders={reminders} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} openModal={openModal} setView={setView} />;
@@ -331,6 +330,31 @@ export default function App() {
     { id: 'settings', icon: Settings, label: 'Configurações' }
   ];
 
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-bgLight dark:bg-gray-900">
+        <div className="animate-spin w-10 h-10 border-4 border-mint border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    if (showAuthScreen) {
+        return (
+            <div className="relative">
+                <button 
+                    onClick={() => setShowAuthScreen(false)}
+                    className="absolute top-4 left-4 z-50 flex items-center gap-2 text-gray-600 hover:text-emerald-600 font-medium text-sm bg-white/80 px-3 py-2 rounded-lg backdrop-blur-sm"
+                >
+                    <ArrowLeft size={18} /> Voltar para o início
+                </button>
+                <AuthScreen onLogin={() => {}} />
+            </div>
+        );
+    }
+    return <LandingPage onLoginClick={() => setShowAuthScreen(true)} />;
+  }
+
   return (
     <div className={`h-[100dvh] transition-colors duration-300 font-inter ${isDarkMode ? 'dark bg-gray-900' : 'bg-bgLight'}`}>
       <style>{`
@@ -343,7 +367,7 @@ export default function App() {
       `}</style>
       
       <div className="flex flex-col md:flex-row h-full overflow-hidden">
-        
+ 
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 shrink-0 z-20">
             <Logo size="small" />
             <div 
@@ -411,8 +435,8 @@ export default function App() {
                 <item.icon className={`w-6 h-6 ${view === item.id ? 'fill-current opacity-20' : ''}`} strokeWidth={view === item.id ? 2.5 : 2} />
                 <span className="text-[10px] font-medium mt-1">{item.label.split(' ')[0]}</span>
               </button>
-           ))}
-           <button 
+            ))}
+            <button 
                 onClick={() => setView('settings')} 
                 className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
                   view === 'settings' ? 'text-mint' : 'text-gray-400 dark:text-gray-500'
@@ -420,11 +444,11 @@ export default function App() {
               >
                 <Settings className="w-6 h-6" />
                 <span className="text-[10px] font-medium mt-1">Ajustes</span>
-           </button>
+            </button>
         </nav>
 
       </div>
-      
+ 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'transaction' ? (editingId ? "Editar Transação" : (transactionType === 'income' ? "Nova Receita" : "Nova Despesa")) : (editingId ? "Editar Lembrete" : "Novo Lembrete")}>
         {modalType === 'transaction' ? (
           <form onSubmit={handleSaveTransaction} className="space-y-3">
