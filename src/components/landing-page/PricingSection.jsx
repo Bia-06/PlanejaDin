@@ -53,7 +53,7 @@ const pricingData = [
   },
 ];
 
-const PricingSection = () => {
+const PricingSection = ({ onLoginClick }) => {
   return (
     <section id="pricing" className="py-20 md:py-28 bg-white">
       <div className="container mx-auto px-4">
@@ -133,6 +133,7 @@ const PricingSection = () => {
                     <Button
                       size="lg"
                       disabled={isPaidPlan} 
+                      onClick={!isPaidPlan ? onLoginClick : undefined}
                       variant={plan.ctaVariant === "outline" ? "outline" : "default"}
                       className={cn(
                         "w-full mb-8 h-12 text-base font-semibold rounded-xl transition-all duration-300",

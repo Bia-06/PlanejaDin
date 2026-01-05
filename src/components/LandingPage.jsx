@@ -27,9 +27,7 @@ const LandingPage = ({ onLoginClick }) => {
         <ScrollReveal>
             <HowItWorksSection />
         </ScrollReveal>
-    
-        <PricingSection />
-
+            <PricingSection onLoginClick={onLoginClick} />
         <ScrollReveal>
             <FAQSection />
         </ScrollReveal>
