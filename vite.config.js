@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import path from "path" // Importante para o Lovable funcionar
+import path from "path"
 
 export default defineConfig({
   plugins: [
@@ -44,7 +44,19 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"), // O segredo para o código do Lovable não quebrar
+      "@": path.resolve(__dirname, "./src"), 
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1600, 
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        }
+      }
+    }
+  }
 })
