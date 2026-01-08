@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useSupabase';
-import AuthScreen from './components/AuthScreen';
+// IMPORTANTE: Mudei o nome do import aqui para AuthModal
+import AuthModal from './components/AuthModal'; 
 import DashboardView from './components/DashboardView';
 import TransactionsView from './components/TransactionsView'; 
 import ReportsView from './components/ReportsView';
@@ -27,11 +28,13 @@ import {
 
 export default function App() {
 
+  // showAuthScreen agora controla se o MODAL está aberto ou fechado
   const [showAuthScreen, setShowAuthScreen] = useState(false);
   const { user: authUser, loading: authLoading, signOut } = useAuth();
   const [view, setView] = useState('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
   
+  // --- Estados do Dashboard ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('transaction');
   const [transactionType, setTransactionType] = useState('expense');
@@ -80,6 +83,7 @@ export default function App() {
   const [reminderForm, setReminderForm] = useState({ title: '', date: getLocalDateString(), details: '' });
   const [filters, setFilters] = useState({ type: 'all', category: 'all', status: 'all', startDate: '', endDate: '', minAmount: '', maxAmount: '' });
 
+  // Effects
   useEffect(() => {
     const currentCatObj = categories.find(c => c.name === form.category);
     if (currentCatObj && form.subcategory) {
@@ -339,20 +343,16 @@ export default function App() {
   }
 
   if (!user) {
-    if (showAuthScreen) {
-        return (
-            <div className="relative">
-                <button 
-                    onClick={() => setShowAuthScreen(false)}
-                    className="absolute top-4 left-4 z-50 flex items-center gap-2 text-gray-600 hover:text-emerald-600 font-medium text-sm bg-white/80 px-3 py-2 rounded-lg backdrop-blur-sm"
-                >
-                    <ArrowLeft size={18} /> Voltar para o início
-                </button>
-                <AuthScreen onLogin={() => {}} />
-            </div>
-        );
-    }
-    return <LandingPage onLoginClick={() => setShowAuthScreen(true)} />;
+    return (
+        <>
+            <LandingPage onLoginClick={() => setShowAuthScreen(true)} />
+            <AuthModal 
+                isOpen={showAuthScreen} 
+                onClose={() => setShowAuthScreen(false)} 
+                onLogin={() => {}}
+            />
+        </>
+    );
   }
 
   return (
@@ -363,6 +363,8 @@ export default function App() {
         .font-inter { font-family: 'Inter', sans-serif; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+        .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
       `}</style>
       
