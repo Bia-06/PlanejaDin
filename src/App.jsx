@@ -56,7 +56,6 @@ export default function App() {
     loading = false;
   }
 
-  // --- ALTERAÇÃO AQUI: Adicionado updatePaymentMethod ---
   const { 
     transactions, 
     reminders, 
@@ -75,7 +74,7 @@ export default function App() {
     updateCategory, 
     deleteCategory,
     addPaymentMethod, 
-    updatePaymentMethod, // <--- ADICIONADO
+    updatePaymentMethod, 
     deletePaymentMethod 
   } = useTransactions(user?.id);
 
@@ -334,7 +333,7 @@ export default function App() {
                 deleteCategory={deleteCategory}
                 paymentMethods={paymentMethods}
                 addPaymentMethod={addPaymentMethod}
-                updatePaymentMethod={updatePaymentMethod} // <--- ALTERAÇÃO AQUI
+                updatePaymentMethod={updatePaymentMethod} 
                 deletePaymentMethod={deletePaymentMethod}
                 transactions={transactions} 
              />
@@ -362,7 +361,7 @@ export default function App() {
             onLogout={handleLogout} 
             paymentMethods={paymentMethods}
             addPaymentMethod={addPaymentMethod}
-            updatePaymentMethod={updatePaymentMethod} // <--- ALTERAÇÃO AQUI TAMBÉM (OPCIONAL MAS BOA PRÁTICA)
+            updatePaymentMethod={updatePaymentMethod} 
             deletePaymentMethod={deletePaymentMethod}
         />
       );
@@ -371,7 +370,6 @@ export default function App() {
     }
   };
 
-  // MENU LATERAL (DESKTOP)
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Visão Geral' },
     { id: 'transactions', icon: List, label: 'Movimentações' },

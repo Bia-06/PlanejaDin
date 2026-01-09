@@ -16,22 +16,17 @@ const CategoriesView = ({
   deletePaymentMethod,
   transactions = [] 
 }) => {
-  // --- Estados Categorias ---
+
   const [newCategory, setNewCategory] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState('#2DD4BF');
   const [activeCategoryId, setActiveCategoryId] = useState(null);
   const [newSubcat, setNewSubcat] = useState('');
-
-  // --- Estados de Edição ---
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingSub, setEditingSub] = useState(null);
   const [editingPayment, setEditingPayment] = useState(null);
-
-  // --- Estados Formas de Pagamento ---
   const [newPaymentMethod, setNewPaymentMethod] = useState('');
   const [newPaymentColor, setNewPaymentColor] = useState('#F472B6');
 
-  // --- Helpers de Cálculo ---
   const categoryStats = useMemo(() => {
     const stats = {};
     transactions.forEach(t => {
@@ -58,8 +53,6 @@ const CategoriesView = ({
     return Math.max(...values, 1);
   }, [categoryStats]);
 
-  // --- Handlers ---
-
   const handleAddCategory = () => {
     if (newCategory.trim()) {
       addCategory(newCategory.trim(), newCategoryColor);
@@ -80,7 +73,7 @@ const CategoriesView = ({
       }
   };
 
-  // --- Edição de Nomes (Categoria) ---
+
   const handleSaveCategoryName = async () => {
       if (editingCategory && editingCategory.name.trim()) {
           await updateCategory(editingCategory.id, { name: editingCategory.name });
@@ -88,7 +81,6 @@ const CategoriesView = ({
       }
   };
 
-  // --- Edição de Nomes (Pagamento) ---
   const handleSavePaymentName = async () => {
       if (editingPayment && editingPayment.name.trim()) {
           if (updatePaymentMethod) {
@@ -139,14 +131,12 @@ const CategoriesView = ({
   return (
     <div className="space-y-6 pb-24"> 
         
-        {/* --- CARD DE CATEGORIAS --- */}
         <Card>
             <h3 className="font-bold text-lg text-teal dark:text-white mb-4 flex items-center gap-2 font-poppins">
                 <Tag className="w-5 h-5 text-mint" /> Categorias e Subcategorias
             </h3>
             
             <div className="flex gap-3 mb-6 items-center">
-                {/* Botão Cor Nova Categoria */}
                 <div className="relative w-12 h-12 rounded-full border-4 border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm shrink-0 hover:border-mint dark:hover:border-mint transition-colors cursor-pointer group">
                     <input 
                         type="color" 
@@ -171,12 +161,10 @@ const CategoriesView = ({
                     return (
                     <div key={cat.id} className="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 transition-all shadow-sm">
                         
-                        {/* Header da Categoria */}
                         <div className="flex flex-col p-4 gap-3">
                             <div className="flex justify-between items-center gap-2">
                                 
                                 <div className="flex items-center gap-3 flex-1 overflow-hidden">
-                                    {/* Botão Cor Categoria Existente */}
                                     <div className="relative w-6 h-6 rounded-full border-2 border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm shrink-0 cursor-pointer hover:border-mint dark:hover:border-mint transition-colors" style={{ backgroundColor: cat.color || '#ccc' }}>
                                         <input
                                             type="color"
@@ -328,14 +316,12 @@ const CategoriesView = ({
             </div>
         </Card>
 
-        {/* --- CARD DE FORMAS DE PAGAMENTO --- */}
         <Card>
             <h3 className="font-bold text-lg text-teal dark:text-white mb-4 flex items-center gap-2 font-poppins">
                 <CreditCard className="w-5 h-5 text-mint" /> Formas de Pagamento
             </h3>
             
             <div className="flex gap-3 mb-6 items-center">
-                 {/* Botão Cor Novo Pagamento */}
                  <div className="relative w-12 h-12 rounded-full border-4 border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm shrink-0 hover:border-mint dark:hover:border-mint transition-colors cursor-pointer group">
                     <input 
                         type="color" 
@@ -363,7 +349,6 @@ const CategoriesView = ({
                             <div key={method.id} className="flex justify-between items-center p-3 border border-gray-100 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm relative overflow-hidden group">
                                 
                                 <div className="flex items-center gap-3 flex-1 overflow-hidden">
-                                    {/* BOLINHA EDITÁVEL - Pagamento Existente */}
                                     <div className="relative w-6 h-6 rounded-full border-2 border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm shrink-0 cursor-pointer hover:border-mint dark:hover:border-mint transition-colors" style={{ backgroundColor: method.color || '#ccc' }}>
                                         <input
                                             type="color"
@@ -374,7 +359,6 @@ const CategoriesView = ({
                                         />
                                     </div>
 
-                                    {/* Edição de Nome do Pagamento */}
                                     {isEditingPayment ? (
                                         <div className="flex items-center gap-2 flex-1">
                                             <input 

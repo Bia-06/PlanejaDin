@@ -14,10 +14,9 @@ const MoreView = ({
   deleteCategory,
   onLogout 
 }) => {
-  // Estados de navegação interna do menu Mais
-  const [subView, setSubView] = useState('menu'); // 'menu', 'settings', 'categories'
+  
+  const [subView, setSubView] = useState('menu'); 
 
-  // SEÇÃO: MENU PRINCIPAL
   if (subView === 'menu') {
     return (
       <div className="animate-fadeIn pb-24 font-inter">
@@ -25,7 +24,6 @@ const MoreView = ({
         
         <div className="space-y-4">
           
-          {/* Botão Configurações (Perfil) */}
           <button 
             onClick={() => setSubView('settings')}
             className="w-full bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between group hover:border-teal transition-all"
@@ -42,7 +40,6 @@ const MoreView = ({
             <ChevronRight className="text-gray-300 group-hover:text-teal" />
           </button>
 
-          {/* Botão Categorias */}
           <button 
             onClick={() => setSubView('categories')}
             className="w-full bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between group hover:border-mint transition-all"
@@ -59,14 +56,13 @@ const MoreView = ({
             <ChevronRight className="text-gray-300 group-hover:text-mint" />
           </button>
 
-          {/* Cartão Sobre (Estático aqui no menu) */}
           <Card className="mt-8 opacity-80 hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-3 mb-2">
               <Info className="w-5 h-5 text-mint" />
               <h3 className="font-bold text-teal dark:text-white">Sobre o App</h3>
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-               <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.0.25 (Beta)</span></p>
+               <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.0.26 (Beta)</span></p>
                <p className="flex justify-between"><span>Última Atualização:</span><span>09 JAN 2026</span></p>
               <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400">
                 Feito com 💜 por <a href="https://portfolio--beatriz.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-mint font-bold hover:underline transition-all">Beatriz Pires</a>
@@ -78,14 +74,12 @@ const MoreView = ({
     );
   }
 
-  // SEÇÃO: CONFIGURAÇÕES (Wrapper com botão de voltar)
   if (subView === 'settings') {
     return (
       <div className="animate-in slide-in-from-right duration-300">
         <button onClick={() => setSubView('menu')} className="flex items-center gap-2 text-gray-500 mb-4 hover:text-teal transition-colors">
           <ArrowLeft size={20} /> Voltar para Mais
         </button>
-        {/* Renderiza SettingsView SEM o extraContent, pois categorias é separado no mobile */}
         <SettingsView 
           user={user} 
           isDarkMode={isDarkMode} 
@@ -96,7 +90,6 @@ const MoreView = ({
     );
   }
 
-  // SEÇÃO: CATEGORIAS (Wrapper com botão de voltar)
   if (subView === 'categories') {
     return (
       <div className="animate-in slide-in-from-right duration-300 pb-24">

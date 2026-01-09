@@ -11,7 +11,6 @@ export const useTransactions = (userId) => {
   const [paymentMethods, setPaymentMethods] = useState([]); 
   const [remindersLoading, setRemindersLoading] = useState(true);
 
-  // ... (fetchTransactions permanece igual)
   const fetchTransactions = async () => {
     if (!userId) return;
     try {
@@ -31,7 +30,6 @@ export const useTransactions = (userId) => {
     }
   };
 
-  // ... (fetchCategories permanece igual)
   const fetchCategories = async () => {
     if (!userId) return;
     try {
@@ -51,7 +49,6 @@ export const useTransactions = (userId) => {
     }
   };
 
-  // ... (fetchPaymentMethods permanece igual)
   const fetchPaymentMethods = async () => {
     if (!userId) return;
     try {
@@ -81,7 +78,6 @@ export const useTransactions = (userId) => {
     return { error };
   };
 
-  // --- NOVA FUNÇÃO ADICIONADA: Atualizar Pagamento (Nome ou Cor) ---
   const updatePaymentMethod = async (id, updates) => {
     try {
         const { data, error } = await supabase
@@ -170,7 +166,6 @@ export const useTransactions = (userId) => {
     return { error };
   };
 
-  // ... (Restante das funções de Transação e Lembretes permanecem iguais)
   const fetchReminders = async () => { /*...*/ if(!userId) return; try{ setRemindersLoading(true); const {data, error} = await supabase.from('reminders').select('*').eq('user_id', userId).order('date', {ascending:true}); if(error) throw error; setReminders(data||[]); } catch(e){ console.error(e) } finally{ setRemindersLoading(false) } };
   const addTransaction = async (t) => { const {data, error} = await supabase.from('transactions').insert([t]).select(); if(!error) setTransactions(p => [data[0], ...p].sort((a,b)=>new Date(b.date)-new Date(a.date))); return {data, error} };
   const updateTransaction = async (id, u) => { const {data, error} = await supabase.from('transactions').update(u).eq('id', id).select(); if(!error && data) setTransactions(p => p.map(t => t.id === id ? data[0] : t)); return {data, error} };

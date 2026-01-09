@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Megaphone } from 'lucide-react'; // Trocamos o sino pelo Megafone
+import { Megaphone } from 'lucide-react'; 
 import { supabase } from '../config/supabase'; 
 
 export default function NotificationBell({ variant = 'default' }) {
@@ -56,7 +56,6 @@ export default function NotificationBell({ variant = 'default' }) {
     }
   };
 
-  // Lógica: Se for no rodapé (sidebar-footer), abre para CIMA. Senão, abre para BAIXO.
   const dropdownClasses = variant === 'sidebar-footer'
     ? "absolute bottom-full left-0 mb-4 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2"
     : "absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2";

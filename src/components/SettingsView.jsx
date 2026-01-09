@@ -202,7 +202,6 @@ const SettingsView = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* COLUNA 1: PERFIL */}
         <Card>
           <div className="flex flex-col items-center mb-8">
             <div 
@@ -316,7 +315,6 @@ const SettingsView = ({
           </div>
         </Card>
 
-        {/* COLUNA 2: PREFERENCIAS + SAIR + SOBRE O APP (Visivel só no desktop) */}
         <div className="space-y-6">
           
           <Card>
@@ -349,7 +347,6 @@ const SettingsView = ({
             </div>
           </Card>
 
-          {/* SOBRE O APP: Adicionado de volta, mas com 'hidden md:block' para aparecer SÓ no Desktop */}
           <div className="hidden md:block">
             <Card className="opacity-80 hover:opacity-100 transition-opacity">
                 <div className="flex items-center gap-3 mb-2">
