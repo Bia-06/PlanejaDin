@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useSupabase';
-// IMPORTANTE: Mudei o nome do import aqui para AuthModal
 import AuthModal from './components/AuthModal'; 
 import DashboardView from './components/DashboardView';
 import TransactionsView from './components/TransactionsView'; 
@@ -14,11 +13,12 @@ import Select from './components/UI/Select';
 import Button from './components/UI/Button';
 import Logo from './components/UI/Logo';
 import LandingPage from './components/LandingPage';
+import NotificationBell from './components/NotificationBell'; // <--- O Sininho
 
 import { useTransactions } from './hooks/useTransactions';
 
 import { 
-  LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Repeat, Layers, ArrowLeft
+  LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Repeat, Layers
 } from 'lucide-react';
 
 import { 
@@ -28,7 +28,6 @@ import {
 
 export default function App() {
 
-  // showAuthScreen agora controla se o MODAL está aberto ou fechado
   const [showAuthScreen, setShowAuthScreen] = useState(false);
   const { user: authUser, loading: authLoading, signOut } = useAuth();
   const [view, setView] = useState('dashboard');
@@ -370,20 +369,27 @@ export default function App() {
       
       <div className="flex flex-col md:flex-row h-full overflow-hidden">
  
+        {/* --- MOBILE HEADER --- */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 shrink-0 z-20">
             <Logo size="small" />
-            <div 
-              onClick={() => setView('settings')}
-              className="w-8 h-8 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border border-gray-200 dark:border-gray-600 cursor-pointer"
-            >
-                {user?.user_metadata?.avatar_url ? (
-                  <img src={user.user_metadata.avatar_url} alt="Perfil" className="w-full h-full object-cover" />
-                ) : (
-                  user?.email?.charAt(0).toUpperCase()
-                )}
+            
+            <div className="flex items-center gap-3">
+                <NotificationBell />
+                
+                <div 
+                    onClick={() => setView('settings')}
+                    className="w-8 h-8 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border border-gray-200 dark:border-gray-600 cursor-pointer"
+                >
+                    {user?.user_metadata?.avatar_url ? (
+                    <img src={user.user_metadata.avatar_url} alt="Perfil" className="w-full h-full object-cover" />
+                    ) : (
+                    user?.email?.charAt(0).toUpperCase()
+                    )}
+                </div>
             </div>
         </header>
 
+        {/* --- DESKTOP SIDEBAR --- */}
         <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm z-20">
           <div className="p-8 border-b border-gray-50 dark:border-gray-700">
             <Logo size="large" showSlogan={true} centered={true} className="mb-2" />
@@ -398,31 +404,45 @@ export default function App() {
           </nav>
 
           <div className="p-6 border-t border-gray-50 dark:border-gray-700">
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onClick={() => setView('settings')}>
-              <div className="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border border-gray-200 dark:border-gray-600">
-                {user?.user_metadata?.avatar_url ? (
-                  <img src={user.user_metadata.avatar_url} alt="Perfil" className="w-full h-full object-cover" />
-                ) : (
-                  user?.email?.charAt(0).toUpperCase()
-                )}
-              </div>
-              <div className="overflow-hidden text-left">
-                <p className="text-sm font-bold text-teal dark:text-white truncate">
-                  {user?.user_metadata?.name || 'Usuário'}
-                </p>
-                <p className="text-[10px] text-gray-500 truncate flex items-center gap-1.5 mt-0.5 font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-mint"></span>
-                  Plano Gratuito
-                </p>
-              </div>
+            <div className="flex items-center gap-2">
+                
+                <div 
+                  className="flex-1 flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-2 rounded-2xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-0" 
+                  onClick={() => setView('settings')}
+                >
+                  <div className="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border border-gray-200 dark:border-gray-600 shrink-0">
+                    {user?.user_metadata?.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="Perfil" className="w-full h-full object-cover" />
+                    ) : (
+                      user?.email?.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  
+                  <div className="overflow-hidden text-left">
+                    <p className="text-sm font-bold text-teal dark:text-white truncate">
+                      {user?.user_metadata?.name?.split(' ')[0] || 'Usuário'}
+                    </p>
+                    <p className="text-[10px] text-gray-500 truncate flex items-center gap-1.5 mt-0.5 font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-mint"></span>
+                      Plano Gratuito
+                    </p>
+                  </div>
+                </div>
+
+                <div className="shrink-0">
+                    <NotificationBell variant="sidebar-footer" />
+                </div>
+
             </div>
           </div>
         </aside>
 
+        {/* --- MAIN CONTENT AREA --- */}
         <main className="flex-1 overflow-y-auto relative bg-bgLight dark:bg-gray-900 pb-24 md:pb-0">
           <div className="max-w-5xl mx-auto p-4 md:p-10">{renderView()}</div>
         </main>
 
+        {/* --- MOBILE FOOTER NAV --- */}
         <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center px-2 py-3 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
            {menuItems.slice(0, 5).map(item => (
               <button 
