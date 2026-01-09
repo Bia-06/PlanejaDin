@@ -7,18 +7,20 @@ import ReportsView from './components/ReportsView';
 import RemindersView from './components/RemindersView';
 import CalendarView from './components/CalendarView';
 import SettingsView from './components/SettingsView';
+import CategoriesView from './components/CategoriesView'; 
+import MoreView from './components/MoreView'; 
 import Modal from './components/UI/Modal';
 import Input from './components/UI/Input';
 import Select from './components/UI/Select';
 import Button from './components/UI/Button';
 import Logo from './components/UI/Logo';
 import LandingPage from './components/LandingPage';
-import NotificationBell from './components/NotificationBell'; // <--- O Sininho
+import NotificationBell from './components/NotificationBell'; 
 
 import { useTransactions } from './hooks/useTransactions';
 
 import { 
-  LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Repeat, Layers
+  LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Repeat, Layers, Menu, Tag
 } from 'lucide-react';
 
 import { 
@@ -32,8 +34,6 @@ export default function App() {
   const { user: authUser, loading: authLoading, signOut } = useAuth();
   const [view, setView] = useState('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
-  // --- Estados do Dashboard ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('transaction');
   const [transactionType, setTransactionType] = useState('expense');
@@ -56,10 +56,12 @@ export default function App() {
     loading = false;
   }
 
+  // --- ALTERAÇÃO AQUI: Adicionado updatePaymentMethod ---
   const { 
     transactions, 
     reminders, 
-    categories, 
+    categories,
+    paymentMethods, 
     addTransaction,
     updateTransaction,      
     updateTransactionGroup, 
@@ -71,7 +73,10 @@ export default function App() {
     deleteReminder,
     addCategory,
     updateCategory, 
-    deleteCategory
+    deleteCategory,
+    addPaymentMethod, 
+    updatePaymentMethod, // <--- ADICIONADO
+    deletePaymentMethod 
   } = useTransactions(user?.id);
 
   const [form, setForm] = useState({
@@ -82,7 +87,6 @@ export default function App() {
   const [reminderForm, setReminderForm] = useState({ title: '', date: getLocalDateString(), details: '' });
   const [filters, setFilters] = useState({ type: 'all', category: 'all', status: 'all', startDate: '', endDate: '', minAmount: '', maxAmount: '' });
 
-  // Effects
   useEffect(() => {
     const currentCatObj = categories.find(c => c.name === form.category);
     if (currentCatObj && form.subcategory) {
@@ -319,17 +323,62 @@ export default function App() {
       case 'reports': return <ReportsView transactions={transactions} />;
       case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} />;
       case 'calendar': return <CalendarView transactions={transactions} reminders={reminders} />;
-      case 'settings': return <SettingsView user={user} categories={categories} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} addCategory={addCategory} updateCategory={updateCategory} deleteCategory={deleteCategory} onLogout={handleLogout} />;
+      
+      case 'categories': return (
+        <div className="animate-fadeIn max-w-4xl mx-auto">
+             <h2 className="text-2xl font-bold mb-6 text-teal dark:text-white font-poppins">Gerenciar Categorias & Pagamentos</h2>
+             <CategoriesView 
+                categories={categories}
+                addCategory={addCategory}
+                updateCategory={updateCategory}
+                deleteCategory={deleteCategory}
+                paymentMethods={paymentMethods}
+                addPaymentMethod={addPaymentMethod}
+                updatePaymentMethod={updatePaymentMethod} // <--- ALTERAÇÃO AQUI
+                deletePaymentMethod={deletePaymentMethod}
+                transactions={transactions} 
+             />
+        </div>
+      );
+
+      case 'settings': return (
+        <SettingsView 
+            user={user} 
+            isDarkMode={isDarkMode} 
+            setIsDarkMode={setIsDarkMode} 
+            onLogout={handleLogout}
+        />
+      );
+      
+      case 'more': return (
+        <MoreView 
+            user={user} 
+            categories={categories}
+            isDarkMode={isDarkMode} 
+            setIsDarkMode={setIsDarkMode} 
+            addCategory={addCategory} 
+            updateCategory={updateCategory} 
+            deleteCategory={deleteCategory} 
+            onLogout={handleLogout} 
+            paymentMethods={paymentMethods}
+            addPaymentMethod={addPaymentMethod}
+            updatePaymentMethod={updatePaymentMethod} // <--- ALTERAÇÃO AQUI TAMBÉM (OPCIONAL MAS BOA PRÁTICA)
+            deletePaymentMethod={deletePaymentMethod}
+        />
+      );
+
       default: return <DashboardView />;
     }
   };
 
+  // MENU LATERAL (DESKTOP)
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Visão Geral' },
     { id: 'transactions', icon: List, label: 'Movimentações' },
     { id: 'reports', icon: FileText, label: 'Relatórios' },
     { id: 'reminders', icon: Bell, label: 'Lembretes' },
     { id: 'calendar', icon: CalendarIcon, label: 'Calendário' },
+    { id: 'categories', icon: Tag, label: 'Categorias' }, 
     { id: 'settings', icon: Settings, label: 'Configurações' }
   ];
 
@@ -365,11 +414,15 @@ export default function App() {
         .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        /* Custom scrollbar for categories list */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; }
       `}</style>
       
       <div className="flex flex-col md:flex-row h-full overflow-hidden">
  
-        {/* --- MOBILE HEADER --- */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 shrink-0 z-20">
             <Logo size="small" />
             
@@ -377,7 +430,7 @@ export default function App() {
                 <NotificationBell />
                 
                 <div 
-                    onClick={() => setView('settings')}
+                    onClick={() => setView('more')}
                     className="w-8 h-8 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border border-gray-200 dark:border-gray-600 cursor-pointer"
                 >
                     {user?.user_metadata?.avatar_url ? (
@@ -389,7 +442,6 @@ export default function App() {
             </div>
         </header>
 
-        {/* --- DESKTOP SIDEBAR --- */}
         <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm z-20">
           <div className="p-8 border-b border-gray-50 dark:border-gray-700">
             <Logo size="large" showSlogan={true} centered={true} className="mb-2" />
@@ -437,12 +489,10 @@ export default function App() {
           </div>
         </aside>
 
-        {/* --- MAIN CONTENT AREA --- */}
         <main className="flex-1 overflow-y-auto relative bg-bgLight dark:bg-gray-900 pb-24 md:pb-0">
           <div className="max-w-5xl mx-auto p-4 md:p-10">{renderView()}</div>
         </main>
 
-        {/* --- MOBILE FOOTER NAV --- */}
         <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center px-2 py-3 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
            {menuItems.slice(0, 5).map(item => (
               <button 
@@ -458,14 +508,15 @@ export default function App() {
                 <span className="text-[10px] font-medium mt-1">{item.label.split(' ')[0]}</span>
               </button>
             ))}
+            
             <button 
-                onClick={() => setView('settings')} 
+                onClick={() => setView('more')} 
                 className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
-                  view === 'settings' ? 'text-mint' : 'text-gray-400 dark:text-gray-500'
+                  view === 'more' ? 'text-mint' : 'text-gray-400 dark:text-gray-500'
                 }`}
               >
-                <Settings className="w-6 h-6" />
-                <span className="text-[10px] font-medium mt-1">Ajustes</span>
+                <Menu className="w-6 h-6" />
+                <span className="text-[10px] font-medium mt-1">Mais</span>
             </button>
         </nav>
 
