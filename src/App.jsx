@@ -331,7 +331,7 @@ export default function App() {
                 addCategory={addCategory}
                 updateCategory={updateCategory}
                 deleteCategory={deleteCategory}
-                paymentMethods={paymentMethods}
+                paymentMethods={paymentMethods} 
                 addPaymentMethod={addPaymentMethod}
                 updatePaymentMethod={updatePaymentMethod} 
                 deletePaymentMethod={deletePaymentMethod}
@@ -373,10 +373,10 @@ export default function App() {
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Visão Geral' },
     { id: 'transactions', icon: List, label: 'Movimentações' },
-    { id: 'reports', icon: FileText, label: 'Relatórios' },
-    { id: 'reminders', icon: Bell, label: 'Lembretes' },
-    { id: 'calendar', icon: CalendarIcon, label: 'Calendário' },
     { id: 'categories', icon: Tag, label: 'Categorias' }, 
+    { id: 'reminders', icon: Bell, label: 'Lembretes' },
+    { id: 'reports', icon: FileText, label: 'Relatórios' },
+    { id: 'calendar', icon: CalendarIcon, label: 'Calendário' },
     { id: 'settings', icon: Settings, label: 'Configurações' }
   ];
 
