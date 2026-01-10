@@ -41,7 +41,10 @@ export default function App() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const [editingId, setEditingId] = useState(null);
-  const [editScope, setEditScope] = useState('single'); 
+  const [editScope, setEditScope] = useState('single');
+  
+  // NOVO ESTADO: Controla o reset da tela "Mais"
+  const [resetMoreKey, setResetMoreKey] = useState(0);
  
   const DEBUG_MODE = false; 
   let user = authUser;
@@ -352,17 +355,11 @@ export default function App() {
       case 'more': return (
         <MoreView 
             user={user} 
-            categories={categories}
+            transactions={transactions}
             isDarkMode={isDarkMode} 
             setIsDarkMode={setIsDarkMode} 
-            addCategory={addCategory} 
-            updateCategory={updateCategory} 
-            deleteCategory={deleteCategory} 
             onLogout={handleLogout} 
-            paymentMethods={paymentMethods}
-            addPaymentMethod={addPaymentMethod}
-            updatePaymentMethod={updatePaymentMethod} 
-            deletePaymentMethod={deletePaymentMethod}
+            resetKey={resetMoreKey} // Passa a chave de reset
         />
       );
 
@@ -370,13 +367,14 @@ export default function App() {
     }
   };
 
+  // 1. ADICIONADO RELATÓRIOS DE VOLTA À LISTA PARA APARECER NO DESKTOP
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Visão Geral' },
     { id: 'transactions', icon: List, label: 'Movimentações' },
     { id: 'categories', icon: Tag, label: 'Categorias' }, 
     { id: 'reminders', icon: Bell, label: 'Lembretes' },
-    { id: 'reports', icon: FileText, label: 'Relatórios' },
     { id: 'calendar', icon: CalendarIcon, label: 'Calendário' },
+    { id: 'reports', icon: FileText, label: 'Relatórios' }, // <--- VOLTOU AQUI
     { id: 'settings', icon: Settings, label: 'Configurações' }
   ];
 
@@ -412,7 +410,6 @@ export default function App() {
         .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-        /* Custom scrollbar for categories list */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
@@ -428,7 +425,10 @@ export default function App() {
                 <NotificationBell />
                 
                 <div 
-                    onClick={() => setView('more')}
+                    onClick={() => {
+                        setView('more');
+                        setResetMoreKey(prev => prev + 1); // Reseta também ao clicar no avatar
+                    }}
                     className="w-8 h-8 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border border-gray-200 dark:border-gray-600 cursor-pointer"
                 >
                     {user?.user_metadata?.avatar_url ? (
@@ -492,6 +492,7 @@ export default function App() {
         </main>
 
         <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center px-2 py-3 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+           {/* 2. MOBILE: Slice para mostrar apenas os top 5 + Mais (Relatórios fica escondido aqui, acessível pelo Mais) */}
            {menuItems.slice(0, 5).map(item => (
               <button 
                 key={item.id} 
@@ -508,7 +509,10 @@ export default function App() {
             ))}
             
             <button 
-                onClick={() => setView('more')} 
+                onClick={() => {
+                  setView('more');
+                  setResetMoreKey(prev => prev + 1); // 3. LÓGICA DE RESET AO CLICAR EM MAIS
+                }} 
                 className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
                   view === 'more' ? 'text-mint' : 'text-gray-400 dark:text-gray-500'
                 }`}
@@ -520,6 +524,7 @@ export default function App() {
 
       </div>
  
+      {/* Modais omitidos para brevidade, mas devem ser mantidos aqui */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'transaction' ? (editingId ? "Editar Transação" : (transactionType === 'income' ? "Nova Receita" : "Nova Despesa")) : (editingId ? "Editar Lembrete" : "Novo Lembrete")}>
         {modalType === 'transaction' ? (
           <form onSubmit={handleSaveTransaction} className="space-y-3">
