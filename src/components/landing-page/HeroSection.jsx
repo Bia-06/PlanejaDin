@@ -91,7 +91,7 @@ const HeroSection = ({ onLoginClick }) => {
             </div>
 
             <div className="absolute -bottom-6 -right-4 md:-right-12 w-32 md:w-48 z-20 animate-float drop-shadow-2xl">
-              <div className="bg-slate-900 rounded-[3rem] p-3 shadow-2xl ring-1 ring-slate-800">
+              <div className="bg-slate-900 rounded-[3rem] p-2 shadow-2xl ring-1 ring-slate-800">
                 <div className="bg-black rounded-[2.5rem] overflow-hidden relative">
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-5 bg-black rounded-full z-30 flex items-center justify-center ring-1 ring-white/10">
                      <div className="w-1 h-1 rounded-full bg-slate-800 ml-auto mr-2" />

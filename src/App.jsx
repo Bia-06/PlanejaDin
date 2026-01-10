@@ -320,7 +320,7 @@ export default function App() {
       case 'transactions': 
         return <TransactionsView transactions={transactions} filters={filters} setFilters={setFilters} searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryOptions={categoryOptions} openModal={openModal} handleToggleStatus={handleToggleStatus} handleDelete={handleDelete} handleBatchDelete={handleBatchDelete} />;
       case 'reports': return <ReportsView transactions={transactions} />;
-      case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} />;
+      case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} updateReminder={updateReminder} />;
       case 'calendar': return <CalendarView transactions={transactions} reminders={reminders} />;
       
       case 'categories': return (

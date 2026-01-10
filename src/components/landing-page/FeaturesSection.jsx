@@ -21,8 +21,8 @@ const features = [
   {
     icon: Bell,
     title: "Lembretes inteligentes",
-    description: "Adicione e edite lembretes de pagamentos direto no site. Organize seus prazos facilmente.",
-    benefit: "Nunca mais esqueça uma conta",
+    description: "Adicione e edite lembretes direto no site. Organize seus prazos facilmente.",
+    benefit: "Nunca mais esqueça uma conta ou um compromisso",
     image: "/reminder-print.png",
     placeholder: "Print: Lista de lembretes",
   },
