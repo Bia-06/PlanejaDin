@@ -28,13 +28,11 @@ const MoreView = ({
         
         <div className="space-y-4">
           
-          {/* Botão Configurações */}
           <button 
             onClick={() => setSubView('settings')}
             className="w-full bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between group hover:border-teal transition-all"
           >
              <div className="flex items-center gap-4">
-               {/* CORRIGIDO: Cinza no modo escuro (dark:bg-gray-700 dark:text-gray-300) */}
                <div className="w-12 h-12 rounded-full bg-teal/10 dark:bg-gray-700 flex items-center justify-center text-teal dark:text-gray-300 group-hover:bg-teal group-hover:text-white transition-colors">
                   <Settings size={24} />
                </div>
@@ -46,13 +44,11 @@ const MoreView = ({
             <ChevronRight className="text-gray-300 group-hover:text-teal" />
           </button>
 
-          {/* Botão Relatórios */}
           <button 
             onClick={() => setSubView('reports')}
             className="w-full bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between group hover:border-teal transition-all"
           >
             <div className="flex items-center gap-4">
-               {/* CORRIGIDO: Cinza no modo escuro (dark:bg-gray-700 dark:text-gray-300) */}
                <div className="w-12 h-12 rounded-full bg-teal/10 dark:bg-gray-700 flex items-center justify-center text-teal dark:text-gray-300 group-hover:bg-teal group-hover:text-white transition-colors">
                   <FileText size={24} />
                </div>
@@ -64,22 +60,20 @@ const MoreView = ({
             <ChevronRight className="text-gray-300 group-hover:text-teal" />
           </button>
 
-          {/* Card Sobre */}
           <Card className="mt-8 opacity-80 hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-3 mb-2">
               <Info className="w-5 h-5 text-mint" />
               <h3 className="font-bold text-teal dark:text-white">Sobre o App</h3>
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-               <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.0.28 (Beta)</span></p>
-               <p className="flex justify-between"><span>Última Atualização:</span><span>10 JAN 2026</span></p>
+               <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.0.29 (Beta)</span></p>
+               <p className="flex justify-between"><span>Última Atualização:</span><span>11 JAN 2026</span></p>
               <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400">
                 Feito com 💜 por <a href="https://portfolio--beatriz.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-mint font-bold hover:underline transition-all">Beatriz Pires</a>
               </div>
             </div>
           </Card>
 
-          {/* Botão Sair - CORRIGIDO: Agora está dentro do container correto */}
           <button 
             onClick={onLogout}
             className="w-full p-4 mt-4 flex items-center justify-center gap-2 text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-colors"
@@ -92,7 +86,6 @@ const MoreView = ({
     );
   }
 
-  // Sub-view: Configurações
   if (subView === 'settings') {
     return (
       <div className="animate-in slide-in-from-right duration-300">
@@ -109,7 +102,6 @@ const MoreView = ({
     );
   }
 
-  // Sub-view: Relatórios
   if (subView === 'reports') {
     return (
       <div className="animate-in slide-in-from-right duration-300 pb-24">

@@ -27,7 +27,6 @@ const CategoriesView = ({
   const [newPaymentMethod, setNewPaymentMethod] = useState('');
   const [newPaymentColor, setNewPaymentColor] = useState('#F472B6');
 
-  // ... (Mantenha os useMemo de estatísticas iguais) ...
   const categoryStats = useMemo(() => {
     const stats = {};
     transactions.forEach(t => {
@@ -54,7 +53,6 @@ const CategoriesView = ({
     return Math.max(...values, 1);
   }, [categoryStats]);
 
-  // ... (Mantenha as funções handle iguais) ...
   const handleAddCategory = () => {
     if (newCategory.trim()) {
       addCategory(newCategory.trim(), newCategoryColor);
@@ -130,13 +128,11 @@ const CategoriesView = ({
   return (
     <div className="space-y-6 pb-24"> 
         
-        {/* --- CARD DE CATEGORIAS (MANTIDO IGUAL, APENAS RESUMIDO AQUI PARA FOCAR NO ERRO) --- */}
         <Card>
             <h3 className="font-bold text-lg text-teal dark:text-white mb-4 flex items-center gap-2 font-poppins">
                 <Tag className="w-5 h-5 text-mint" /> Categorias e Subcategorias
             </h3>
             
-            {/* Input Categoria */}
             <div className="flex gap-3 mb-6 items-center">
                 <div className="relative w-12 h-12 rounded-full border-4 border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm shrink-0 hover:border-mint transition-colors cursor-pointer group">
                     <input type="color" value={newCategoryColor} onChange={(e) => setNewCategoryColor(e.target.value)} className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] cursor-pointer p-0 border-0"/>
@@ -145,7 +141,6 @@ const CategoriesView = ({
                 <button onClick={handleAddCategory} className="bg-mint text-white p-3 rounded-xl hover:bg-[#00b57a] transition-colors shrink-0 shadow-sm active:scale-95"><Plus size={20}/></button>
             </div>
 
-            {/* Lista de Categorias */}
             <div className="space-y-4">
                 {categories.map(cat => {
                     const totalVal = categoryStats[cat.name] || 0;
@@ -236,13 +231,11 @@ const CategoriesView = ({
             </div>
         </Card>
 
-        {/* --- CARD DE FORMAS DE PAGAMENTO (CORRIGIDO PARA MOBILE) --- */}
         <Card>
             <h3 className="font-bold text-lg text-teal dark:text-white mb-4 flex items-center gap-2 font-poppins">
                 <CreditCard className="w-5 h-5 text-mint" /> Formas de Pagamento
             </h3>
             
-            {/* Input Pagamento */}
             <div className="flex gap-3 mb-6 items-center">
                  <div className="relative w-12 h-12 rounded-full border-4 border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm shrink-0 hover:border-mint transition-colors cursor-pointer group">
                     <input type="color" value={newPaymentColor} onChange={(e) => setNewPaymentColor(e.target.value)} className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] cursor-pointer p-0 border-0"/>
@@ -257,7 +250,6 @@ const CategoriesView = ({
                 <button onClick={handleAddPaymentMethod} className="bg-mint text-white p-3 rounded-xl hover:bg-[#00b57a] transition-colors shrink-0 shadow-sm active:scale-95"><Plus size={20}/></button>
             </div>
 
-            {/* Lista Pagamentos - REMOVIDO max-h NO MOBILE PARA EVITAR SCROLL DUPLO */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:max-h-[400px] md:overflow-y-auto md:pr-1 custom-scrollbar">
                 {paymentMethods && paymentMethods.length > 0 ? (
                     paymentMethods.map((method) => {

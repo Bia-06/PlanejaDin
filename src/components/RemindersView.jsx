@@ -8,37 +8,31 @@ import { formatDate, getLocalDateString } from '../utils/formatters';
 
 const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder }) => {
   const [showHistory, setShowHistory] = useState(false);
-  const [filterType, setFilterType] = useState('all'); // 'all', 'tomorrow', 'month'
+  const [filterType, setFilterType] = useState('all'); 
 
-  // Datas de referência
+
   const todayStr = getLocalDateString();
   
-  // Calcular data de amanhã
   const tomorrowObj = new Date();
   tomorrowObj.setDate(tomorrowObj.getDate() + 1);
   const tomorrowStr = tomorrowObj.toISOString().split('T')[0];
 
-  // Separação inicial: Concluídos vs Ativos
   const completedReminders = reminders.filter(r => r.completed);
   const activeReminders = reminders.filter(r => !r.completed);
 
-  // Separação dos Ativos: Hoje/Atrasados vs Futuros
   const todayOrOverdueReminders = activeReminders.filter(r => r.date <= todayStr);
   const futureReminders = activeReminders.filter(r => r.date > todayStr);
 
-  // Aplicação dos Filtros nos Futuros
   const filteredFutureReminders = futureReminders.filter(r => {
     if (filterType === 'tomorrow') {
       return r.date === tomorrowStr;
     }
     if (filterType === 'month') {
-      // Verifica se o mês e ano são iguais ao atual (YYYY-MM)
       return r.date.startsWith(todayStr.substring(0, 7));
     }
-    return true; // 'all' mostra todos os futuros
+    return true; 
   });
 
-  // Função para marcar como concluído/pendente
   const toggleReminderStatus = async (reminder) => {
     if (updateReminder) {
         await updateReminder(reminder.id, { completed: !reminder.completed });
@@ -49,7 +43,6 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
       const isOverdue = !isCompleted && rem.date < todayStr;
       const isToday = !isCompleted && rem.date === todayStr;
       
-      // MANTIDO: Borda Roxa (purple-500) para futuros e dia vigente
       let borderClass = 'border-l-purple-500 dark:border-l-purple-500'; 
       
       if (isCompleted) {
@@ -66,13 +59,11 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
         `}>
           
           <div className="flex-1 min-w-0 pr-3">
-            {/* ALTERADO: Título voltou para Cinza (gray-700) e Branco no dark mode */}
             <h3 className={`font-bold text-lg md:text-xl mb-1 truncate transition-all ${isCompleted ? 'text-gray-500 dark:text-gray-500 line-through decoration-2' : 'text-gray-700 dark:text-white'}`}>
                 {rem.title}
             </h3>
             
             <p className={`text-xs md:text-sm font-semibold flex items-center gap-1 mb-3 ${isOverdue ? 'text-red-500 dark:text-red-400 font-bold' : 'text-gray-600 dark:text-gray-400'}`}>
-              {/* ALTERADO: Ícone do calendário agora é Cinza (gray-400) se não estiver atrasado */}
               <CalendarIcon className={`w-3.5 h-3.5 ${isOverdue ? 'text-red-500 dark:text-red-400' : 'text-gray-400 dark:text-gray-500'}`}/> 
               {formatDate(rem.date)}
               
@@ -81,7 +72,6 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
                     Atrasado
                   </span>
               )}
-              {/* Badge "Hoje" mantida em roxo para combinar com a borda */}
               {!isCompleted && isToday && (
                   <span className="text-[10px] uppercase bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded ml-2 font-bold tracking-wide">
                     Hoje
@@ -136,7 +126,7 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
       onClick={() => setFilterType(value)}
       className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
         active 
-          ? 'bg-teal text-white border-teal shadow-md shadow-teal/20' // ALTERADO: Verde/Teal (igual Novo Lembrete)
+          ? 'bg-teal text-white border-teal shadow-md shadow-teal/20'
           : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600' // ALTERADO: Hover mais claro no dark mode (gray-600)
       }`}
     >
@@ -156,7 +146,6 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
         </Button>
       </div>
 
-      {/* --- SEÇÃO 1: FOCO (HOJE & ATRASADOS) --- */}
       {todayOrOverdueReminders.length > 0 && (
         <div className="space-y-3">
             <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
@@ -171,15 +160,13 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
         </div>
       )}
 
-      {/* --- SEÇÃO 2: PRÓXIMOS (COM FILTROS) --- */}
       <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-700 pb-2">
             <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
                 <CalendarDays className="lucide lucide-calendar-days w-4 h-4 text-amber-500" />
                 Próximos
             </h3>
-            
-            {/* Barra de Filtros */}
+   
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
                 <Filter className="w-4 h-4 text-gray-400 mr-1 hidden sm:block" />
                 <FilterButton label="Todos" value="all" active={filterType === 'all'} />
@@ -205,7 +192,6 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
           </div>
       </div>
 
-      {/* Feedback Visual Vazio Global */}
       {todayOrOverdueReminders.length === 0 && futureReminders.length === 0 && (
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700 mt-4">
             <div className="bg-mint/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -215,8 +201,6 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Você não tem lembretes pendentes.</p>
           </div>
       )}
-
-      {/* --- SEÇÃO 3: HISTÓRICO --- */}
       {completedReminders.length > 0 && (
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <button 

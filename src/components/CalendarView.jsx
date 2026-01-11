@@ -14,7 +14,7 @@ const CalendarView = ({ transactions = [], reminders = [] }) => {
     '1-1': 'Ano Novo',
     '16-2': 'Carnaval',
     '17-2': 'Carnaval',
-    '18-2': 'Carnaval',
+    '18-2': 'Quarta-Feira de Cinzas',
     '21-4': 'Tiradentes',
     '1-5': 'Dia do Trabalho',
     '4-6': 'Corpus Christi',
@@ -79,8 +79,6 @@ const CalendarView = ({ transactions = [], reminders = [] }) => {
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const selectedDayEvents = getEventsForSelectedDay(selectedDay);
 
-  // --- NOVA LÓGICA DE AGRUPAMENTO ---
-  // Calcula o resumo por categoria apenas para o dia selecionado
   const categorySummary = useMemo(() => {
     const summary = {};
     
@@ -91,7 +89,7 @@ const CalendarView = ({ transactions = [], reminders = [] }) => {
         summary[catName] = {
           name: catName,
           total: 0,
-          type: t.type, // Assume o tipo da primeira transação (geralmente categorias são fixas como Despesa ou Receita)
+          type: t.type,
           count: 0
         };
       }
