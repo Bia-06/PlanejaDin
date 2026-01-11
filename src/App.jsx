@@ -20,7 +20,7 @@ import NotificationBell from './components/NotificationBell';
 import { useTransactions } from './hooks/useTransactions';
 
 import { 
-  LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Repeat, Layers, Menu, Tag
+  LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Repeat, Layers, Menu, Tag, CalendarDays
 } from 'lucide-react';
 
 import { 
@@ -43,7 +43,6 @@ export default function App() {
   const [editingId, setEditingId] = useState(null);
   const [editScope, setEditScope] = useState('single');
   
-  // NOVO ESTADO: Controla o reset da tela "Mais"
   const [resetMoreKey, setResetMoreKey] = useState(0);
  
   const DEBUG_MODE = false; 
@@ -81,8 +80,19 @@ export default function App() {
     deletePaymentMethod 
   } = useTransactions(user?.id);
 
+  // ESTADO DO FORMULÁRIO
   const [form, setForm] = useState({
-    description: '', amount: '', type: 'expense', category: 'Outros', subcategory: '', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2, group_id: null
+    description: '', 
+    amount: '', 
+    type: 'expense', 
+    category: '', 
+    subcategory: '', 
+    paymentMethod: '', 
+    date: getLocalDateString(), 
+    status: 'pending', 
+    recurrence: '', 
+    installments: 2, 
+    group_id: null
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -118,6 +128,11 @@ export default function App() {
   const categoryOptions = categories.map(cat => ({
     value: cat.name,
     label: cat.name
+  }));
+
+  const paymentMethodOptions = paymentMethods.map(method => ({
+    value: method.name,
+    label: method.name
   }));
 
   const todayStr = getLocalDateString();
@@ -178,18 +193,27 @@ export default function App() {
           type: dataToEdit.type,
           category: dataToEdit.category || 'Outros',
           subcategory: dataToEdit.subcategory || '',
+          paymentMethod: dataToEdit.payment_method || '', 
           date: dataToEdit.date,
           status: dataToEdit.status,
-          recurrence: 'single', 
+          recurrence: '', 
           installments: 2,
           group_id: dataToEdit.group_id 
         });
       } else {
         setEditingId(null);
         setForm({
-            description: '', amount: '', type: subType, category: 'Outros', subcategory: '',
-            date: getLocalDateString(), status: 'pending', recurrence: 'single', 
-            installments: 2, group_id: null
+            description: '', 
+            amount: '', 
+            type: subType, 
+            category: '', 
+            subcategory: '',
+            paymentMethod: '', 
+            date: getLocalDateString(), 
+            status: 'pending', 
+            recurrence: '', 
+            installments: 2, 
+            group_id: null
         });
       }
     } 
@@ -211,7 +235,19 @@ export default function App() {
   };
 
   const resetForms = () => {
-    setForm({ description: '', amount: '', type: 'expense', category: 'Outros', subcategory: '', date: getLocalDateString(), status: 'pending', recurrence: 'single', installments: 2, group_id: null });
+    setForm({ 
+      description: '', 
+      amount: '', 
+      type: 'expense', 
+      category: '', 
+      subcategory: '', 
+      paymentMethod: '', 
+      date: getLocalDateString(), 
+      status: 'pending', 
+      recurrence: '', 
+      installments: 2, 
+      group_id: null 
+    });
     setReminderForm({ title: '', date: getLocalDateString(), details: '' });
     setFormErrors({});
     setEditingId(null);
@@ -219,7 +255,13 @@ export default function App() {
 
   const handleSaveTransaction = async (e) => {
     e.preventDefault();
-    if (!form.description.trim() || !form.amount) return;
+    
+    // VALIDACAO OBRIGATORIA: Categoria e Forma de Pagamento
+    if (!form.description.trim() || !form.amount || !form.category || !form.paymentMethod) {
+        alert("Por favor, preencha todos os campos obrigatórios (Descrição, Valor, Categoria e Forma de Pagamento).");
+        return;
+    }
+
     setActionLoading(true);
     const baseAmount = parseCommaValue(form.amount);
 
@@ -231,7 +273,8 @@ export default function App() {
                 amount: baseAmount,
                 type: form.type,
                 category: form.category,
-                subcategory: form.subcategory, 
+                subcategory: form.subcategory,
+                payment_method: form.paymentMethod, 
             });
         } else {
             await updateTransaction(editingId, {
@@ -240,6 +283,7 @@ export default function App() {
                 type: form.type,
                 category: form.category,
                 subcategory: form.subcategory,
+                payment_method: form.paymentMethod, 
                 date: form.date,
                 status: form.status
             });
@@ -247,7 +291,9 @@ export default function App() {
       } 
       else {
         let loopCount = 1;
-        if (form.recurrence === 'fixed') loopCount = 12;
+        
+        if (form.recurrence === 'weekly') loopCount = 12; 
+        if (form.recurrence === 'fixed') loopCount = 12; 
         if (form.recurrence === 'installment') loopCount = parseInt(form.installments);
         
         const [year, month, day] = form.date.split('-').map(Number);
@@ -258,16 +304,32 @@ export default function App() {
         }
 
         for (let i = 0; i < loopCount; i++) {
-          let currentDate = new Date(year, month - 1 + i, day);
+          let currentDate;
+          
+          if (form.recurrence === 'weekly') {
+             currentDate = new Date(year, month - 1, day);
+             currentDate.setDate(currentDate.getDate() + (i * 7));
+          } else {
+             currentDate = new Date(year, month - 1 + i, day);
+          }
+
           const dateString = getLocalDateString(currentDate);
           let description = form.description;
           if (form.recurrence === 'installment') description = `${form.description} (${i + 1}/${loopCount})`;
+          
           let status = i === 0 ? form.status : 'pending';
           const transactionAmount = form.recurrence === 'installment' ? parseFloat((baseAmount / loopCount).toFixed(2)) : baseAmount;
           
           await addTransaction({ 
-              description, amount: transactionAmount, type: form.type, category: form.category, subcategory: form.subcategory,
-              date: dateString, status, user_id: user.id, 
+              description, 
+              amount: transactionAmount, 
+              type: form.type, 
+              category: form.category, // Já validado como não vazio
+              subcategory: form.subcategory,
+              payment_method: form.paymentMethod, // Já validado como não vazio
+              date: dateString, 
+              status, 
+              user_id: user.id, 
               group_id: newGroupId 
           });
         }
@@ -359,7 +421,7 @@ export default function App() {
             isDarkMode={isDarkMode} 
             setIsDarkMode={setIsDarkMode} 
             onLogout={handleLogout} 
-            resetKey={resetMoreKey} // Passa a chave de reset
+            resetKey={resetMoreKey} 
         />
       );
 
@@ -367,14 +429,13 @@ export default function App() {
     }
   };
 
-  // 1. ADICIONADO RELATÓRIOS DE VOLTA À LISTA PARA APARECER NO DESKTOP
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Visão Geral' },
     { id: 'transactions', icon: List, label: 'Movimentações' },
     { id: 'categories', icon: Tag, label: 'Categorias' }, 
     { id: 'reminders', icon: Bell, label: 'Lembretes' },
     { id: 'calendar', icon: CalendarIcon, label: 'Calendário' },
-    { id: 'reports', icon: FileText, label: 'Relatórios' }, // <--- VOLTOU AQUI
+    { id: 'reports', icon: FileText, label: 'Relatórios' },
     { id: 'settings', icon: Settings, label: 'Configurações' }
   ];
 
@@ -427,7 +488,7 @@ export default function App() {
                 <div 
                     onClick={() => {
                         setView('more');
-                        setResetMoreKey(prev => prev + 1); // Reseta também ao clicar no avatar
+                        setResetMoreKey(prev => prev + 1); 
                     }}
                     className="w-8 h-8 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border border-gray-200 dark:border-gray-600 cursor-pointer"
                 >
@@ -492,7 +553,6 @@ export default function App() {
         </main>
 
         <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center px-2 py-3 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-           {/* 2. MOBILE: Slice para mostrar apenas os top 5 + Mais (Relatórios fica escondido aqui, acessível pelo Mais) */}
            {menuItems.slice(0, 5).map(item => (
               <button 
                 key={item.id} 
@@ -511,7 +571,7 @@ export default function App() {
             <button 
                 onClick={() => {
                   setView('more');
-                  setResetMoreKey(prev => prev + 1); // 3. LÓGICA DE RESET AO CLICAR EM MAIS
+                  setResetMoreKey(prev => prev + 1);
                 }} 
                 className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
                   view === 'more' ? 'text-mint' : 'text-gray-400 dark:text-gray-500'
@@ -524,7 +584,6 @@ export default function App() {
 
       </div>
  
-      {/* Modais omitidos para brevidade, mas devem ser mantidos aqui */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'transaction' ? (editingId ? "Editar Transação" : (transactionType === 'income' ? "Nova Receita" : "Nova Despesa")) : (editingId ? "Editar Lembrete" : "Novo Lembrete")}>
         {modalType === 'transaction' ? (
           <form onSubmit={handleSaveTransaction} className="space-y-3">
@@ -559,11 +618,31 @@ export default function App() {
             <Input label="Descrição" placeholder={form.type === 'income' ? "Ex: Salário, Venda, Reembolso..." : "Ex: Aluguel, Mercado, Uber..."} value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} required />
             <Input label="Valor (R$)" type="text" placeholder="0,00" value={formatValueForInput(form.amount)} onChange={(e) => setForm({...form, amount: handleAmountInputChange(e.target.value)})} required />
             
+            {/* GRID DE CATEGORIA E FORMA DE PAGAMENTO - AGORA COM REQUIRED */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <Select label="Categoria" value={form.category} onChange={(e) => setForm({...form, category: e.target.value})} options={categoryOptions} />
-              <Input label="Data" type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} required />
+              <Select 
+                label="Categoria" 
+                value={form.category} 
+                onChange={(e) => setForm({...form, category: e.target.value})} 
+                required={true} // Obrigatorio no HTML
+                options={[
+                  { value: '', label: 'Selecione...' }, 
+                  ...categoryOptions
+                ]} 
+              />
+              <Select 
+                label="Forma de Pagamento" 
+                value={form.paymentMethod} 
+                onChange={(e) => setForm({...form, paymentMethod: e.target.value})} 
+                required={true} // Obrigatorio no HTML
+                options={[
+                  { value: '', label: 'Selecione...' },
+                  ...paymentMethodOptions
+                ]} 
+              />
             </div>
 
+            {/* SUBCATEGORIA */}
             {(() => {
                 const selectedCatData = categories.find(c => c.name === form.category);
                 const hasSubcats = selectedCatData && selectedCatData.subcategories && selectedCatData.subcategories.length > 0;
@@ -585,18 +664,40 @@ export default function App() {
                 }
                 return null;
             })()}
+            
+            {/* DATA - CORRIGIDA PARA MOBILE (min-w-0 evita quebrar layout) */}
+            <div className="w-full min-w-0">
+               <Input label="Data" type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} required />
+            </div>
 
             {!editingId && (
                 <div className="mt-1">
                   <label className="block text-sm font-semibold text-teal dark:text-gray-300 mb-1">Repetição</label>
                   <div className="flex gap-2">
-                    <button type="button" onClick={() => setForm({...form, recurrence: 'single'})} className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'single' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
-                      <div className="w-2 h-2 rounded-full bg-current"></div> Única
+                    {/* Botão SEMANAL */}
+                    <button 
+                        type="button" 
+                        onClick={() => setForm({...form, recurrence: form.recurrence === 'weekly' ? '' : 'weekly'})} 
+                        className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'weekly' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}
+                    >
+                      <CalendarDays size={14} /> Semanal
                     </button>
-                    <button type="button" onClick={() => setForm({...form, recurrence: 'fixed'})} className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'fixed' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
+                    
+                    {/* Botão FIXA */}
+                    <button 
+                        type="button" 
+                        onClick={() => setForm({...form, recurrence: form.recurrence === 'fixed' ? '' : 'fixed'})} 
+                        className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'fixed' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}
+                    >
                       <Repeat size={14} /> Fixa
                     </button>
-                    <button type="button" onClick={() => setForm({...form, recurrence: 'installment'})} className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'installment' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}>
+                    
+                    {/* Botão PARCELADA */}
+                    <button 
+                        type="button" 
+                        onClick={() => setForm({...form, recurrence: form.recurrence === 'installment' ? '' : 'installment'})} 
+                        className={`flex-1 py-2 px-2 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 ${form.recurrence === 'installment' ? 'bg-mint/10 border-mint text-mint' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}
+                    >
                       <Layers size={14} /> Parcelada
                     </button>
                   </div>
