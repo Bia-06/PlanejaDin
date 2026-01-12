@@ -324,9 +324,9 @@ export default function App() {
               description, 
               amount: transactionAmount, 
               type: form.type, 
-              category: form.category, // Já validado como não vazio
+              category: form.category, 
               subcategory: form.subcategory,
-              payment_method: form.paymentMethod, // Já validado como não vazio
+              payment_method: form.paymentMethod, 
               date: dateString, 
               status, 
               user_id: user.id, 
@@ -379,6 +379,23 @@ export default function App() {
     await updateTransactionStatus(item.id, newStatus);
   };
 
+  // CORREÇÃO: Função corrigida sem duplicação de código
+  const handleToggleReminder = async (reminder) => {
+    const currentStatus = reminder.status || 'pending';
+    const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+    
+    setActionLoading(true);
+    try {
+      await updateReminder(reminder.id, { 
+        status: newStatus 
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const renderView = () => {
     switch (view) {
       case 'dashboard': return <DashboardView user={user} summary={summary} chartData={chartDataArray} reminders={reminders} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} openModal={openModal} setView={setView} />;
@@ -386,7 +403,18 @@ export default function App() {
         return <TransactionsView transactions={transactions} filters={filters} setFilters={setFilters} searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryOptions={categoryOptions} openModal={openModal} handleToggleStatus={handleToggleStatus} handleDelete={handleDelete} handleBatchDelete={handleBatchDelete} />;
       case 'reports': return <ReportsView transactions={transactions} />;
       case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} updateReminder={updateReminder} />;
-      case 'calendar': return <CalendarView transactions={transactions} reminders={reminders} />;
+      case 'calendar': return (
+        <CalendarView 
+          transactions={transactions} 
+          reminders={reminders} 
+          paymentMethods={paymentMethods} 
+          onUpdateTransaction={updateTransaction} 
+          onDeleteTransaction={(id) => handleDelete('transactions', id)} 
+          onDeleteReminder={(id) => handleDelete('reminders', id)}
+          onToggleReminder={handleToggleReminder}
+          onToggleStatus={handleToggleStatus}
+        />
+      );
       
       case 'categories': return (
         <div className="animate-fadeIn max-w-4xl mx-auto">
@@ -665,8 +693,8 @@ export default function App() {
                 return null;
             })()}
             
-            {/* DATA - CORRIGIDA PARA MOBILE (min-w-0 evita quebrar layout) */}
-            <div className="w-full min-w-0">
+            {/* DATA - CORRIGIDA PARA MOBILE (w-full min-w-0 max-w-full) */}
+            <div className="w-full min-w-0 max-w-full">
                <Input label="Data" type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} required />
             </div>
 
@@ -732,7 +760,12 @@ export default function App() {
         ) : (
           <form onSubmit={handleAddReminder} className="space-y-4">
             <Input label="Título" placeholder="Ex: Consulta Médica..." value={reminderForm.title} onChange={(e) => setReminderForm({...reminderForm, title: e.target.value})} required />
-            <Input label="Data" type="date" value={reminderForm.date} onChange={(e) => setReminderForm({...reminderForm, date: e.target.value})} required />
+            
+            {/* DATA DO LEMBRETE - CORRIGIDA PARA MOBILE */}
+            <div className="w-full min-w-0 max-w-full">
+                <Input label="Data" type="date" value={reminderForm.date} onChange={(e) => setReminderForm({...reminderForm, date: e.target.value})} required />
+            </div>
+
             <textarea className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-teal dark:text-white" rows="3" placeholder="Ex: Local, horário..." value={reminderForm.details} onChange={(e) => setReminderForm({...reminderForm, details: e.target.value})} />
             <Button type="submit" variant="primary" className="w-full" disabled={actionLoading}>
                 {editingId ? "Salvar Alterações" : "Agendar Lembrete"}

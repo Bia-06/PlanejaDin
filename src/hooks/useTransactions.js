@@ -166,7 +166,7 @@ export const useTransactions = (userId) => {
     return { error };
   };
 
-  const fetchReminders = async () => { /*...*/ if(!userId) return; try{ setRemindersLoading(true); const {data, error} = await supabase.from('reminders').select('*').eq('user_id', userId).order('date', {ascending:true}); if(error) throw error; setReminders(data||[]); } catch(e){ console.error(e) } finally{ setRemindersLoading(false) } };
+  const fetchReminders = async () => { if(!userId) return; try{ setRemindersLoading(true); const {data, error} = await supabase.from('reminders').select('*').eq('user_id', userId).order('date', {ascending:true}); if(error) throw error; setReminders(data||[]); } catch(e){ console.error(e) } finally{ setRemindersLoading(false) } };
   const addTransaction = async (t) => { const {data, error} = await supabase.from('transactions').insert([t]).select(); if(!error) setTransactions(p => [data[0], ...p].sort((a,b)=>new Date(b.date)-new Date(a.date))); return {data, error} };
   const updateTransaction = async (id, u) => { const {data, error} = await supabase.from('transactions').update(u).eq('id', id).select(); if(!error && data) setTransactions(p => p.map(t => t.id === id ? data[0] : t)); return {data, error} };
   const updateTransactionGroup = async (gid, u) => { const {id, date, ...safe} = u; const {data, error} = await supabase.from('transactions').update(safe).eq('group_id', gid).eq('user_id', userId).select(); if(!error) fetchTransactions(); return {data, error} };
@@ -192,7 +192,7 @@ export const useTransactions = (userId) => {
     addTransaction, updateTransaction, updateTransactionGroup, deleteTransaction, deleteTransactions, updateTransactionStatus,
     addReminder, updateReminder, deleteReminder,
     addCategory, deleteCategory, updateCategory,
-    addPaymentMethod, deletePaymentMethod, updatePaymentMethod, // <--- EXPORTANDO A NOVA FUNÇÃO
+    addPaymentMethod, deletePaymentMethod, updatePaymentMethod, 
     fetchTransactions, fetchReminders, fetchCategories
   };
 };

@@ -10,15 +10,15 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
   const [showHistory, setShowHistory] = useState(false);
   const [filterType, setFilterType] = useState('all'); 
 
-
   const todayStr = getLocalDateString();
   
   const tomorrowObj = new Date();
   tomorrowObj.setDate(tomorrowObj.getDate() + 1);
   const tomorrowStr = tomorrowObj.toISOString().split('T')[0];
 
-  const completedReminders = reminders.filter(r => r.completed);
-  const activeReminders = reminders.filter(r => !r.completed);
+  // CORREÇÃO: Usando 'status' em vez de boolean 'completed'
+  const completedReminders = reminders.filter(r => r.status === 'completed');
+  const activeReminders = reminders.filter(r => r.status !== 'completed');
 
   const todayOrOverdueReminders = activeReminders.filter(r => r.date <= todayStr);
   const futureReminders = activeReminders.filter(r => r.date > todayStr);
@@ -33,9 +33,12 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
     return true; 
   });
 
+  // CORREÇÃO: Enviando o status correto para o update
   const toggleReminderStatus = async (reminder) => {
     if (updateReminder) {
-        await updateReminder(reminder.id, { completed: !reminder.completed });
+        const currentStatus = reminder.status || 'pending';
+        const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+        await updateReminder(reminder.id, { status: newStatus });
     }
   };
 
@@ -127,7 +130,7 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
       className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
         active 
           ? 'bg-teal text-white border-teal shadow-md shadow-teal/20'
-          : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600' // ALTERADO: Hover mais claro no dark mode (gray-600)
+          : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600'
       }`}
     >
       {label}
