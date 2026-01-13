@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  TrendingUp, TrendingDown, PieChart as PieChartIcon, Download, Filter
+  TrendingUp, TrendingDown, PieChart as PieChartIcon, Download, Filter, CreditCard, Wallet
 } from 'lucide-react'; 
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -11,9 +11,11 @@ import Button from './UI/Button';
 import { formatCurrency } from '../utils/formatters';
 import { THEME, CHART_COLORS } from '../config/constants';
 
-const ReportsView = ({ transactions = [] }) => {
+const ReportsView = ({ transactions = [], categories = [], paymentMethods = [] }) => {
   const [timeRange, setTimeRange] = useState('currentMonth'); 
   const [chartType, setChartType] = useState('composed');
+  
+  const FALLBACK_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
 
   const filteredTransactions = useMemo(() => {
     const now = new Date();
@@ -87,7 +89,6 @@ const ReportsView = ({ transactions = [] }) => {
   }, [filteredTransactions, timeRange]);
 
   const categoryData = useMemo(() => {
-    
     const expenses = filteredTransactions.filter(t => t.type === 'expense');
     const grouped = {};
 
@@ -98,13 +99,42 @@ const ReportsView = ({ transactions = [] }) => {
     });
 
     return Object.entries(grouped)
-      .map(([name, value], index) => ({
-        name,
-        value,
-        color: CHART_COLORS[index % CHART_COLORS.length] 
-      }))
+      .map(([name, value], index) => {
+        const categoryObj = categories.find(c => c.name === name);
+        const realColor = categoryObj ? categoryObj.color : CHART_COLORS[index % CHART_COLORS.length];
+        
+        return {
+          name,
+          value,
+          color: realColor
+        };
+      })
       .sort((a, b) => b.value - a.value);
-  }, [filteredTransactions]);
+  }, [filteredTransactions, categories]);
+
+  const paymentMethodData = useMemo(() => {
+    const expenses = filteredTransactions.filter(t => t.type === 'expense');
+    const grouped = {};
+
+    expenses.forEach(t => {
+      const method = t.payment_method || 'Outros';
+      if (!grouped[method]) grouped[method] = 0;
+      grouped[method] += Number(t.amount);
+    });
+
+    return Object.entries(grouped)
+      .map(([name, value], index) => {
+        const methodObj = paymentMethods.find(p => p.name === name);
+        const realColor = methodObj ? methodObj.color : FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+
+        return {
+          name,
+          value,
+          color: realColor
+        };
+      })
+      .sort((a, b) => b.value - a.value);
+  }, [filteredTransactions, paymentMethods]);
 
   const monthlyComparison = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -136,8 +166,8 @@ const ReportsView = ({ transactions = [] }) => {
   const totalIncome = evolutionData.reduce((sum, m) => sum + m.Receitas, 0);
   const totalProfit = evolutionData.reduce((sum, m) => sum + m.Lucro, 0);
   const totalExpensesCat = categoryData.reduce((sum, c) => sum + c.value, 0);
-  
-  const savingsRate = totalIncome > 0 ? ((totalProfit / totalIncome) * 100).toFixed(1) : '0.0';
+  const topCategory = categoryData.length > 0 ? categoryData[0] : null;
+  const topPaymentMethod = paymentMethodData.length > 0 ? paymentMethodData[0] : null;
 
   const CustomBarTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -198,7 +228,7 @@ const ReportsView = ({ transactions = [] }) => {
     <div className="animate-fadeIn pb-24 font-inter">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-teal dark:text-white font-poppins">Relatórios de Crescimento</h2>
+          <h2 className="text-2xl font-bold text-teal dark:text-white font-poppins">Relatórios</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Análises detalhadas da sua saúde financeira</p>
         </div>
         
@@ -214,76 +244,172 @@ const ReportsView = ({ transactions = [] }) => {
               <option value="3months" className="dark:bg-gray-800">Últimos 3 meses</option>
               <option value="6months" className="dark:bg-gray-800">Últimos 6 meses</option>
               <option value="1year" className="dark:bg-gray-800">Último ano</option>
-              <option value="all" className="dark:bg-gray-800">Todo período</option>
             </select>
           </div>
           
-          <Button 
-            onClick={handleExport}
-            variant="secondary"
-            className="text-sm"
-          >
+          <Button onClick={handleExport} variant="secondary" className="text-sm">
             <Download className="w-4 h-4" /> Exportar
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <Card className="p-4 border-l-4 border-l-mint h-full flex flex-col justify-center">
           <div className="flex items-center justify-between">
             <div className="min-w-0">
               <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Receitas Totais</p>
-              <p className="text-1 font-bold text-mint truncate">{formatCurrency(totalIncome)}</p>
+              <p className="text-xl font-bold text-mint truncate">{formatCurrency(totalIncome)}</p>
             </div>
-            <div className="p-2 md:p-3 bg-mint/10 rounded-full shrink-0">
-              <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-mint" />
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">No período selecionado</p>
-        </Card>
-        
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Taxa Economia</p>
-              <p className="text-1 font-bold truncate" style={{ color: '#60A5FA' }}>{savingsRate}%</p>
-            </div>
-            <div className="p-2 md:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-full shrink-0">
-              <PieChartIcon className="w-5 h-5 md:w-6 md:h-6" style={{ color: '#60A5FA' }} />
+            <div className="p-2 bg-mint/10 rounded-lg shrink-0">
+              <TrendingUp className="w-6 h-6 text-mint" />
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">Da sua renda</p>
         </Card>
         
-        <Card className="p-4">
+        <Card className="p-4 border-l-4 border-l-yellow h-full flex flex-col justify-center">
           <div className="flex items-center justify-between">
             <div className="min-w-0">
               <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Lucro Líquido</p>
-              <p className="text-1 font-bold text-yellow truncate">{formatCurrency(totalProfit)}</p>
+              <p className="text-xl font-bold text-yellow truncate">{formatCurrency(totalProfit)}</p>
             </div>
-            <div className="p-2 md:p-3 bg-yellow/10 rounded-full shrink-0">
-              <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-yellow" />
+            <div className="p-2 bg-yellow/10 rounded-lg shrink-0">
+              <TrendingUp className="w-6 h-6 text-yellow" />
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">No período selecionado</p>
         </Card>
         
-        <Card className="p-4">
+        <Card className="p-4 border-l-4 border-l-purple-500 h-full flex flex-col justify-center">
           <div className="flex items-center justify-between">
             <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Categorias</p>
-              <p className="text-l font-bold text-purple-500 truncate">{categoryData.length}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Maior Gasto em</p>
+              <p className="text-sm font-bold text-purple-600 dark:text-purple-300 truncate" title={topCategory ? topCategory.name : '-'}>
+                {topCategory ? topCategory.name : '-'}
+              </p>
+              <p className="text-xs text-gray-400">{topCategory ? formatCurrency(topCategory.value) : 'R$ 0,00'}</p>
             </div>
-            <div className="p-2 md:p-3 bg-purple-500/10 rounded-full shrink-0">
-              <span className="text-purple-500 font-bold text-lg md:text-xl">{categoryData.length}</span>
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg shrink-0">
+              <Wallet className="w-6 h-6 text-purple-500" />
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 truncate">Ativas no período</p>
+        </Card>
+        
+        <Card className="p-4 border-l-4 border-l-orange-400 h-full flex flex-col justify-center">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Paga mais com</p>
+              <p className="text-sm font-bold text-orange-500 truncate" title={topPaymentMethod ? topPaymentMethod.name : '-'}>
+                {topPaymentMethod ? topPaymentMethod.name : '-'}
+              </p>
+               <p className="text-xs text-gray-400">{topPaymentMethod ? formatCurrency(topPaymentMethod.value) : 'R$ 0,00'}</p>
+            </div>
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg shrink-0">
+              <CreditCard className="w-6 h-6 text-orange-500" />
+            </div>
+          </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card className="lg:col-span-2">
+        <Card className="flex flex-col h-[400px]">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-teal dark:text-white">Categorias</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Onde você gasta mais</p>
+            </div>
+            <div className="text-right hidden sm:block">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Despesas</p>
+              <p className="font-bold text-teal dark:text-white">{formatCurrency(totalExpensesCat)}</p>
+            </div>
+          </div>
+          
+          <div className="flex-1 min-h-0">
+            {categoryData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80} 
+                    paddingAngle={3}
+                    dataKey="value"
+                    >
+                    {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />
+                    ))}
+                    </Pie>
+                    <Tooltip content={<CustomPieTooltip />} />
+                    <Legend 
+                        layout="vertical"
+                        verticalAlign="middle"
+                        align="right"
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '12px', width: '35%', overflow: 'hidden' }} 
+                        formatter={(value, entry) => (
+                            <span className="text-gray-700 dark:text-gray-200 ml-2 font-medium truncate align-middle" style={{ color: entry.color }}>
+                                {value}
+                            </span>
+                        )}
+                    />
+                </PieChart>
+                </ResponsiveContainer>
+            ) : (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <PieChartIcon className="w-10 h-10 mb-2 opacity-50" />
+                    <p>Sem dados</p>
+                </div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="flex flex-col h-[400px]">
+          <div className="mb-4">
+            <h3 className="text-lg font-bold text-teal dark:text-white">Formas de Pagamento</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Como você costuma pagar</p>
+          </div>
+          
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2">
+            {paymentMethodData.length > 0 ? (
+                 <div className="space-y-5">
+                    {paymentMethodData.map((item, index) => {
+                        const percentage = ((item.value / totalExpensesCat) * 100).toFixed(0);
+                        return (
+                            <div key={item.name} className="relative">
+                                <div className="flex justify-between items-end mb-1">
+                                    <span className="font-medium text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                        {item.name}
+                                    </span>
+                                    <div className="text-right">
+                                        <span className="font-bold text-sm text-gray-800 dark:text-white block">{formatCurrency(item.value)}</span>
+                                    </div>
+                                </div>
+                                <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+                                    <div 
+                                        className="h-2.5 rounded-full transition-all duration-500" 
+                                        style={{ width: `${percentage}%`, backgroundColor: item.color }}
+                                    ></div>
+                                </div>
+                                <div className="text-right mt-0.5">
+                                    <span className="text-xs text-gray-400">{percentage}% do total</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                 </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <CreditCard className="w-10 h-10 mb-2 opacity-50" />
+                    <p>Sem dados</p>
+                </div>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        <Card className="w-full">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-teal dark:text-white">Fluxo Financeiro</h3>
@@ -311,21 +437,10 @@ const ReportsView = ({ transactions = [] }) => {
           <div className="h-[300px] md:h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               {chartType === 'composed' ? (
-                <ComposedChart data={evolutionData}>
+                <ComposedChart data={evolutionData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} vertical={false} />
-                  <XAxis 
-                    dataKey="displayDate" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#94a3b8', fontSize: 12 }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#94a3b8', fontSize: 12 }}
-                    tickFormatter={(value) => `R$${value/1000}k`}
-                    width={40} 
-                  />
+                  <XAxis dataKey="displayDate" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} tickFormatter={(value) => `R$${value/1000}k`} width={48} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Legend />
                   <Bar dataKey="Receitas" fill={THEME.mint} radius={[6, 6, 0, 0]} barSize={20} name="Receitas" />
@@ -333,7 +448,7 @@ const ReportsView = ({ transactions = [] }) => {
                   <Line type="monotone" dataKey="Lucro" stroke={THEME.yellow} strokeWidth={3} dot={{ r: 4, fill: THEME.yellow }} activeDot={{ r: 6 }} name="Lucro" />
                 </ComposedChart>
               ) : chartType === 'area' ? (
-                <AreaChart data={evolutionData}>
+                <AreaChart data={evolutionData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorReceitas" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor={THEME.mint} stopOpacity={0.8}/>
@@ -346,102 +461,22 @@ const ReportsView = ({ transactions = [] }) => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
                   <XAxis dataKey="displayDate" tick={{ fill: '#94a3b8' }} />
-                  <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{ fill: '#94a3b8' }} width={40} />
+                  <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{ fill: '#94a3b8' }} width={48} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Area type="monotone" dataKey="Receitas" stroke={THEME.mint} fill="url(#colorReceitas)" strokeWidth={2} />
                   <Area type="monotone" dataKey="Despesas" stroke={THEME.teal} fill="url(#colorDespesas)" strokeWidth={2} />
                 </AreaChart>
               ) : (
-                <BarChart data={evolutionData}>
+                <BarChart data={evolutionData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
                   <XAxis dataKey="displayDate" tick={{ fill: '#94a3b8' }} />
-                  <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{ fill: '#94a3b8' }} width={40} />
+                  <YAxis tickFormatter={(value) => `R$${value/1000}k`} tick={{ fill: '#94a3b8' }} width={48} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Legend />
                   <Bar dataKey="Receitas" fill={THEME.mint} radius={[6, 6, 0, 0]} />
                   <Bar dataKey="Despesas" fill={THEME.teal} radius={[6, 6, 0, 0]} />
                 </BarChart>
               )}
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h3 className="text-lg font-bold text-teal dark:text-white">Distribuição de Gastos</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Por categoria (Período)</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
-              <p className="font-bold text-teal dark:text-white">{formatCurrency(totalExpensesCat)}</p>
-            </div>
-          </div>
-          
-          <div className="h-[300px] md:h-[380px]">
-            {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                    <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="51%"
-                    innerRadius={60}
-                    outerRadius={90} 
-                    paddingAngle={3}
-                    dataKey="value"
-                    label={(entry) => `${entry.name}`}
-                    labelLine={true}
-                    >
-                    {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />
-                    ))}
-                    </Pie>
-                    <Tooltip content={<CustomPieTooltip />} />
-                    <Legend 
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    iconType="circle"
-                    wrapperStyle={{ paddingBottom: '0px', fontSize: '12px' }} 
-                    formatter={(value) => <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">{value}</span>}
-                    />
-                </PieChart>
-                </ResponsiveContainer>
-            ) : (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                    <PieChartIcon className="w-10 h-10 mb-2 opacity-50" />
-                    <p>Sem despesas neste período</p>
-                </div>
-            )}
-          </div>
-        </Card>
-
-        <Card>
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-teal dark:text-white">Evolução do Lucro</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Saldo líquido no período</p>
-          </div>
-          
-          <div className="h-[250px] md:h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={evolutionData}>
-                <defs>
-                  <linearGradient id="colorLucro" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={THEME.yellow} stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor={THEME.yellow} stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
-                <XAxis dataKey="displayDate" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={40} />
-                <Tooltip 
-                  formatter={(value) => [formatCurrency(value), 'Lucro']}
-                  labelFormatter={(label) => `${label}`}
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Area type="monotone" dataKey="Lucro" stroke={THEME.yellow} strokeWidth={3} fill="url(#colorLucro)" activeDot={{ r: 6, fill: THEME.yellow }} />
-              </AreaChart>
             </ResponsiveContainer>
           </div>
         </Card>

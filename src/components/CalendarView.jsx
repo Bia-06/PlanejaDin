@@ -286,7 +286,6 @@ const categorySummary = useMemo(() => {
                 Legenda
             </h4>
             
-            {/* CORREÇÃO: Grid no mobile para ocupar menos espaço vertical */}
             <div className="grid grid-cols-2 md:flex md:flex-col gap-2 md:gap-4">
               <div className="flex items-center gap-2 md:gap-3 p-1.5 md:p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                 <div className="p-1.5 md:p-2 bg-yellow/10 rounded-lg"><Star className="w-4 h-4 md:w-5 md:h-5 text-yellow fill-yellow"/></div>
@@ -500,9 +499,7 @@ const categorySummary = useMemo(() => {
                         </div>
                     </div>
 
-                    {/* COLUNA DIREITA DOS DETALHES: RESUMO CATEGORIAS + LEMBRETES */}
                     <div className="space-y-6">
-                        {/* Lembretes (COM NOVOS BOTÕES) */}
                         <div>
                              <h4 className="font-bold text-teal dark:text-white mb-4 flex items-center gap-2">
                                 Lembretes <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedDayEvents.reminders.length}</span>
@@ -553,7 +550,6 @@ const categorySummary = useMemo(() => {
                             </div>
                         </div>
 
-                         {/* Resumo Categorias */}
                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
                             <h4 className="font-bold text-gray-600 dark:text-gray-300 mb-4 text-xs uppercase tracking-wider flex justify-between">
                                 <span>Por Categoria</span>

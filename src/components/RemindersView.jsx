@@ -16,7 +16,6 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
   tomorrowObj.setDate(tomorrowObj.getDate() + 1);
   const tomorrowStr = tomorrowObj.toISOString().split('T')[0];
 
-  // CORREÇÃO: Usando 'status' em vez de boolean 'completed'
   const completedReminders = reminders.filter(r => r.status === 'completed');
   const activeReminders = reminders.filter(r => r.status !== 'completed');
 
@@ -33,7 +32,6 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
     return true; 
   });
 
-  // CORREÇÃO: Enviando o status correto para o update
   const toggleReminderStatus = async (reminder) => {
     if (updateReminder) {
         const currentStatus = reminder.status || 'pending';

@@ -15,7 +15,7 @@ const TransactionsView = ({
   setSearchTerm, 
   categoryOptions, 
   categories = [], 
-  paymentMethods = [], // NOVA PROP: Recebe as formas de pagamento
+  paymentMethods = [], 
   openModal, 
   handleToggleStatus, 
   handleDelete,
@@ -148,12 +148,10 @@ const TransactionsView = ({
           filteredTransactions.map(item => {
             const isOverdue = item.status === 'pending' && item.date < today;
             const isSelected = selectedIds.includes(item.id);
-            
-            // LÓGICA DE COR DA CATEGORIA
+
             const catObj = categories.find(c => c.name === item.category);
             const catColor = catObj ? catObj.color : '#2DD4BF';
 
-            // LÓGICA DE COR DA FORMA DE PAGAMENTO
             const pmObj = paymentMethods.find(pm => pm.name === item.payment_method);
             const pmColor = pmObj ? pmObj.color : '#2DD4BF';
 
@@ -183,14 +181,12 @@ const TransactionsView = ({
                     <p className="font-bold text-teal dark:text-white text-lg truncate pr-2">{item.description}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-0.5 flex flex-wrap items-center gap-2">
                       <span className={isOverdue ? "text-red-500 font-bold" : ""}>{formatDate(item.date)}</span>
-                      
-                      {/* CATEGORIA COLORIDA */}
                       <span 
                         className="px-2 py-0.5 rounded text-xs flex items-center gap-1 border"
                         style={{ 
-                            backgroundColor: `${catColor}15`, // 15% opacidade
+                            backgroundColor: `${catColor}15`, 
                             color: catColor,
-                            borderColor: `${catColor}30` // 30% opacidade
+                            borderColor: `${catColor}30`
                         }}
                       >
                         {item.category}
@@ -213,8 +209,6 @@ const TransactionsView = ({
                           <AlertCircle className="w-3 h-3" /> Em atraso
                         </span>
                       )}
-
-                      {/* REMOVIDO "PAGO" DAQUI DA ESQUERDA - AGORA ESTÁ APENAS NO BOTÃO */}
                     </p>
                   </div>
                 </div>
@@ -234,7 +228,7 @@ const TransactionsView = ({
                       } : {}}
                       className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition-colors border ${
                         item.status === 'paid' 
-                          ? '' // Estilos inline definidos acima para cor dinâmica
+                          ? '' 
                           : 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-800'
                       }`}
                     >

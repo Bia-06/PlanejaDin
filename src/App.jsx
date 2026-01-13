@@ -80,7 +80,6 @@ export default function App() {
     deletePaymentMethod 
   } = useTransactions(user?.id);
 
-  // ESTADO DO FORMULÁRIO
   const [form, setForm] = useState({
     description: '', 
     amount: '', 
@@ -413,13 +412,11 @@ export default function App() {
                 handleBatchDelete={handleBatchDelete} 
             />
         );
-      case 'reports': return <ReportsView transactions={transactions} />;
+      case 'reports': return <ReportsView transactions={transactions} categories={categories} paymentMethods={paymentMethods} />;
       case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} updateReminder={updateReminder} />;
-      
-      // ALTERAÇÃO 1: Envolver CalendarView em uma div com overflow controlado
       case 'calendar': return (
         <div className="w-full overflow-x-auto overflow-y-hidden"> 
-          <div className="min-w-[600px] md:min-w-0"> {/* Garante largura mínima para o calendário não quebrar, mas permite scroll */}
+          <div className="min-w-[600px] md:min-w-0"> 
             <CalendarView 
               transactions={transactions} 
               reminders={reminders} 
@@ -433,7 +430,6 @@ export default function App() {
           </div>
         </div>
       );
-      
       case 'categories': return (
         <div className="animate-fadeIn max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold mb-6 text-teal dark:text-white font-poppins">Categorias & Pagamentos</h2>
@@ -450,15 +446,8 @@ export default function App() {
              />
         </div>
       );
-
-      case 'settings': return (
-        <SettingsView user={user} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} onLogout={handleLogout} />
-      );
-      
-      case 'more': return (
-        <MoreView user={user} transactions={transactions} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} onLogout={handleLogout} resetKey={resetMoreKey} />
-      );
-
+      case 'settings': return <SettingsView user={user} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} onLogout={handleLogout} />;
+      case 'more': return <MoreView user={user} transactions={transactions} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} onLogout={handleLogout} resetKey={resetMoreKey} />;
       default: return <DashboardView />;
     }
   };
@@ -511,7 +500,6 @@ export default function App() {
  
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 shrink-0 z-20">
             <Logo size="small" />
-            
             <div className="flex items-center gap-3">
                 <NotificationBell />
                 <div 
@@ -574,7 +562,6 @@ export default function App() {
           </div>
         </aside>
 
-        {/* ALTERAÇÃO 2: Adicionado w-full e overflow-x-hidden para prevenir scroll horizontal global */}
         <main className="flex-1 overflow-y-auto relative bg-bgLight dark:bg-gray-900 pb-24 md:pb-0 w-full overflow-x-hidden">
           <div className="max-w-5xl mx-auto p-4 md:p-10">{renderView()}</div>
         </main>
@@ -620,9 +607,8 @@ export default function App() {
                 }
                 return null;
             })()}
-            <div className="w-full min-w-0 max-w-full">
-                <Input label="Data" type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} required />
-            </div>
+            <Input label="Data" type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} required />
+            
             {!editingId && (
                 <div className="mt-1">
                   <label className="block text-sm font-semibold text-teal dark:text-gray-300 mb-1">Repetição</label>
@@ -649,9 +635,7 @@ export default function App() {
         ) : (
           <form onSubmit={handleAddReminder} className="space-y-4">
             <Input label="Título" placeholder="Ex: Consulta Médica..." value={reminderForm.title} onChange={(e) => setReminderForm({...reminderForm, title: e.target.value})} required />
-            <div className="w-full min-w-0 max-w-full">
-                <Input label="Data" type="date" value={reminderForm.date} onChange={(e) => setReminderForm({...reminderForm, date: e.target.value})} required />
-            </div>
+            <Input label="Data" type="date" value={reminderForm.date} onChange={(e) => setReminderForm({...reminderForm, date: e.target.value})} required />
             <textarea className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-teal dark:text-white" rows="3" placeholder="Ex: Local, horário..." value={reminderForm.details} onChange={(e) => setReminderForm({...reminderForm, details: e.target.value})} />
             <Button type="submit" variant="primary" className="w-full" disabled={actionLoading}>{editingId ? "Salvar Alterações" : "Agendar Lembrete"}</Button>
           </form>

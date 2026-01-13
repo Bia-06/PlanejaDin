@@ -11,7 +11,6 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
     }));
   };
 
-  // Funções auxiliares para calcular strings de data
   const getDateString = (offset = 0) => {
       const d = new Date();
       d.setDate(d.getDate() + offset);
@@ -52,7 +51,6 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
     }));
   };
 
-  // Verificações para estilo ativo
   const isTodayActive = initialFilters.startDate === getDateString(0) && initialFilters.endDate === getDateString(0);
   const isYesterdayActive = initialFilters.startDate === getDateString(-1) && initialFilters.endDate === getDateString(-1);
   const isTomorrowActive = initialFilters.startDate === getDateString(1) && initialFilters.endDate === getDateString(1);
@@ -121,7 +119,6 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
 
               <div className="space-y-4">
                 
-                {/* --- FILTROS RÁPIDOS DE DATA (COM DESTAQUE) --- */}
                 <div>
                       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Filtro Rápido</label>
                       <div className="grid grid-cols-2 gap-2">
