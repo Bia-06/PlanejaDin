@@ -166,7 +166,7 @@ const categorySummary = useMemo(() => {
               };
           } else {
               return {
-                  bg: 'bg-gray-50 dark:bg-gray-800',
+                  bg: 'bg-gray-5 dark:bg-gray-800',
                   text: 'text-gray-500 dark:text-gray-400',
                   border: 'border-gray-100 dark:border-gray-700',
                   iconBg: 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
@@ -214,18 +214,18 @@ const categorySummary = useMemo(() => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <div className="lg:col-span-2">
-          <Card className="p-3 md:p-6 h-full">
+          <Card className="p-2 md:p-6 h-full">
             <div className="grid grid-cols-7 text-center mb-2">
               {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day) => (
-                <div key={day} className="text-gray-400 font-bold text-xs md:text-sm py-2">
+                <div key={day} className="text-gray-400 font-bold text-[10px] md:text-sm py-2">
                   {day.slice(0, 3)} 
                 </div>
               ))}
             </div>
             
-            <div className="grid grid-cols-7 gap-1 md:gap-2">
+            <div className="grid grid-cols-7 gap-0.5 md:gap-2">
               {Array.from({ length: startingDay }).map((_, index) => (
-                <div key={`empty-${index}`} className="min-h-[60px] md:min-h-[100px] bg-gray-50/50 dark:bg-gray-800/30 rounded-lg border border-transparent" />
+                <div key={`empty-${index}`} className="min-h-[50px] md:min-h-[100px] bg-gray-50/50 dark:bg-gray-800/30 rounded-lg border border-transparent" />
               ))}
               
               {Array.from({ length: daysInMonth }).map((_, index) => {
@@ -239,21 +239,21 @@ const categorySummary = useMemo(() => {
                   <button
                     key={day}
                     onClick={() => { setSelectedDay(day); setSearchDayQuery(''); }}
-                    className={`min-h-[60px] md:min-h-[100px] rounded-lg flex flex-col items-center md:items-start justify-start p-1 md:p-2 transition-all border relative
+                    className={`min-h-[50px] md:min-h-[100px] rounded-lg flex flex-col items-center md:items-start justify-start p-0.5 md:p-2 transition-all border relative
                       ${isToday ? 'border-mint ring-1 ring-mint bg-mint/5' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}
                       ${isSelected ? 'ring-2 ring-teal border-teal dark:ring-black  z-10 shadow-md transform scale-[1.02]' : 'hover:border-teal/50 hover:shadow-sm'}
                     `}
                   >
-                    <div className="flex justify-between items-start w-full mb-1">
-                      <span className={`text-xs md:text-sm font-bold ${isToday ? 'text-mint' : 'text-gray-700 dark:text-gray-300'}`}>{day}</span>
-                      {holidayName && <Star className="w-3 h-3 md:w-3.5 md:h-3.5 text-yellow fill-yellow" />}
+                    <div className="flex justify-between items-start w-full mb-0.5 md:mb-1">
+                      <span className={`text-[10px] md:text-sm font-bold ${isToday ? 'text-mint' : 'text-gray-700 dark:text-gray-300'}`}>{day}</span>
+                      {holidayName && <Star className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-yellow fill-yellow" />}
                     </div>
 
-                    <div className="flex gap-1 mb-1 md:mb-2 justify-center md:justify-start w-full">
-                      {events.hasIncome && <div className="w-1.5 h-1.5 rounded-full bg-mint" title="Receita"></div>}
-                      {events.hasExpense && <div className="w-1.5 h-1.5 rounded-full bg-red-500" title="Despesa"></div>}
-                      {events.hasPending && <div className="w-1.5 h-1.5 rounded-full bg-yellow" title="Pendente"></div>}
-                      {events.hasReminder && <div className="w-1.5 h-1.5 rounded-full bg-purple-500" title="Lembrete"></div>}
+                    <div className="flex gap-0.5 md:gap-1 mb-1 md:mb-2 justify-center md:justify-start w-full flex-wrap">
+                      {events.hasIncome && <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-mint" title="Receita"></div>}
+                      {events.hasExpense && <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-red-500" title="Despesa"></div>}
+                      {events.hasPending && <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-yellow" title="Pendente"></div>}
+                      {events.hasReminder && <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-purple-500" title="Lembrete"></div>}
                     </div>
         
                     <div className="w-full space-y-1 overflow-hidden hidden md:block">
@@ -402,7 +402,7 @@ const categorySummary = useMemo(() => {
                             filteredDayTransactions.map(t => {
                                 const styles = getTransactionStyle(t);
                                 return (
-                                <div key={t.id} className={`group relative flex items-center justify-between p-4 rounded-xl border shadow-sm hover:shadow-md transition-all ${styles.bg} ${styles.border}`}>
+                                <div key={t.id} className={`group relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border shadow-sm hover:shadow-md transition-all gap-4 ${styles.bg} ${styles.border}`}>
                                     
                                     {paymentModal.open && paymentModal.transaction?.id === t.id && (
                                         <div className="absolute inset-0 bg-white dark:bg-gray-800 z-20 rounded-xl flex flex-col justify-center px-4 animate-fadeIn border-2 border-mint shadow-lg">
@@ -434,57 +434,57 @@ const categorySummary = useMemo(() => {
                                         </div>
                                     )}
 
-                                    <div className="flex items-center gap-4 min-w-0">
+                                    <div className="flex items-start gap-4 flex-1 min-w-0 w-full">
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${styles.iconBg}`}>
                                             {styles.icon}
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className={`font-bold text-sm truncate ${styles.text}`}>{t.description}</p>
-                                            <p className="text-xs text-gray-500 truncate mt-0.5">
+                                        <div className="min-w-0 flex-1">
+                                            <p className={`font-bold text-sm break-words whitespace-normal leading-snug ${styles.text}`}>{t.description}</p>
+                                            <p className="text-xs text-gray-500 mt-1 break-words whitespace-normal">
                                                 {t.category || 'Geral'} • {t.payment_method || '---'}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 pl-2">
-                                        <p className={`font-bold ${styles.text}`}>
+                                    <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pl-14 sm:pl-0">
+                                        <p className={`font-bold whitespace-nowrap ${styles.text}`}>
                                             {formatCurrency(t.amount)}
                                         </p>
                                         
-                                           <div className="flex items-center gap-1">
-                                        
-                                        {t.type === 'expense' && t.status === 'pending' && (
-                                            <button 
-                                                onClick={() => handleOpenPayModal(t)}
-                                                className="w-8 h-8 rounded-full bg-white hover:bg-mint hover:text-white text-gray-400 border border-gray-200 hover:border-mint transition-all flex items-center justify-center shadow-sm"
-                                                title="Dar baixa (Pagar)"
-                                            >
-                                                <Check size={16} strokeWidth={2.5} />
-                                            </button>
-                                        )}
-                                        {t.type === 'expense' && t.status === 'paid' && (
-                                            <button 
-                                                onClick={() => {
-                                                    if(window.confirm("Deseja desfazer a baixa e tornar pendente novamente?")) {
-                                                        onToggleStatus(t);
-                                                    }
-                                                }}
-                                                className="w-8 h-8 rounded-full bg-white hover:bg-orange-500 hover:text-white text-gray-400 border border-gray-200 hover:border-orange-500 transition-all flex items-center justify-center shadow-sm"
-                                                title="Desfazer baixa (Tornar pendente)"
-                                            >
-                                                <RotateCcw size={16} />
-                                            </button>
-                                        )}
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            {t.type === 'expense' && t.status === 'pending' && (
+                                                <button 
+                                                    onClick={() => handleOpenPayModal(t)}
+                                                    className="w-8 h-8 rounded-full bg-white hover:bg-mint hover:text-white text-gray-400 border border-gray-200 hover:border-mint transition-all flex items-center justify-center shadow-sm"
+                                                    title="Dar baixa (Pagar)"
+                                                >
+                                                    <Check size={16} strokeWidth={2.5} />
+                                                </button>
+                                            )}
+                                            {t.type === 'expense' && t.status === 'paid' && (
+                                                <button 
+                                                    onClick={() => {
+                                                        if(window.confirm("Deseja desfazer a baixa e tornar pendente novamente?")) {
+                                                            onToggleStatus(t);
+                                                        }
+                                                    }}
+                                                    className="w-8 h-8 rounded-full bg-white hover:bg-orange-500 hover:text-white text-gray-400 border border-gray-200 hover:border-orange-500 transition-all flex items-center justify-center shadow-sm"
+                                                    title="Desfazer baixa (Tornar pendente)"
+                                                >
+                                                    <RotateCcw size={16} />
+                                                </button>
+                                            )}
 
-                                        <button 
-                                            onClick={() => confirmDeleteTransaction(t.id)}
-                                            className="w-8 h-8 rounded-full bg-white hover:bg-red-500 hover:text-white text-gray-400 border border-gray-200 hover:border-red-500 transition-all flex items-center justify-center shadow-sm"
-                                            title="Excluir movimentação"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                            <button 
+                                                onClick={() => confirmDeleteTransaction(t.id)}
+                                                className="w-8 h-8 rounded-full bg-white hover:bg-red-500 hover:text-white text-gray-400 border border-gray-200 hover:border-red-500 transition-all flex items-center justify-center shadow-sm"
+                                                title="Excluir movimentação"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </div>
-                                    </div>
+
                                 </div>
                                 );
                             })

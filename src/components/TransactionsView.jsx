@@ -214,11 +214,11 @@ const TransactionsView = ({
                 </div>
 
                 <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center w-full md:w-auto pt-3 md:pt-0 border-t border-gray-100 dark:border-gray-700 md:border-t-0">
-                  <span className={`font-bold text-lg font-inter ${item.type === 'income' ? 'text-mint' : 'text-teal dark:text-white'}`}>
+                  <span className={`font-bold text-lg font-inter whitespace-nowrap ${item.type === 'income' ? 'text-mint' : 'text-teal dark:text-white'}`}>
                     {item.type === 'expense' ? '-' : '+'} {formatCurrency(item.amount)}
                   </span>
                   
-                  <div className="flex items-center gap-2 mt-0 md:mt-2">
+                  <div className="flex items-center gap-2 mt-0 md:mt-2 max-w-[65%] md:max-w-none justify-end">
                     <button 
                       onClick={() => handleToggleStatus(item)} 
                       style={item.status === 'paid' ? {
@@ -226,7 +226,7 @@ const TransactionsView = ({
                           color: pmColor,
                           borderColor: `${pmColor}30`
                       } : {}}
-                      className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition-colors border ${
+                      className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition-colors border max-w-full ${
                         item.status === 'paid' 
                           ? '' 
                           : 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-800'
@@ -234,24 +234,28 @@ const TransactionsView = ({
                     >
                       {item.status === 'paid' ? (
                         <>
-                          <CheckCircle className="w-3.5 h-3.5" /> Pago - {item.payment_method}
+                          <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate max-w-[100px] xs:max-w-[130px] md:max-w-none block">
+                            Pago - {item.payment_method}
+                          </span>
                         </>
                       ) : (
                         <>
-                          <Clock className="w-3.5 h-3.5" /> Pendente
+                          <Clock className="w-3.5 h-3.5 shrink-0" /> 
+                          <span>Pendente</span>
                         </>
                       )}
                     </button>
                     
                     <button 
                       onClick={() => openModal('transaction', item.type, item)} 
-                      className="p-2 text-gray-400 hover:text-teal transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="p-2 text-gray-400 hover:text-teal transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
                       title="Editar"
                     >
                       <Pencil className="w-5 h-5" />
                     </button>
 
-                    <button onClick={() => handleDelete('transactions', item.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <button onClick={() => handleDelete('transactions', item.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>

@@ -415,8 +415,7 @@ export default function App() {
       case 'reports': return <ReportsView transactions={transactions} categories={categories} paymentMethods={paymentMethods} />;
       case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} updateReminder={updateReminder} />;
       case 'calendar': return (
-        <div className="w-full overflow-x-auto overflow-y-hidden"> 
-          <div className="min-w-[600px] md:min-w-0"> 
+        <div className="w-full"> 
             <CalendarView 
               transactions={transactions} 
               reminders={reminders} 
@@ -427,7 +426,6 @@ export default function App() {
               onToggleReminder={handleToggleReminder}
               onToggleStatus={handleToggleStatus}
             />
-          </div>
         </div>
       );
       case 'categories': return (
@@ -563,7 +561,9 @@ export default function App() {
         </aside>
 
         <main className="flex-1 overflow-y-auto relative bg-bgLight dark:bg-gray-900 pb-24 md:pb-0 w-full overflow-x-hidden">
-          <div className="max-w-5xl mx-auto p-4 md:p-10">{renderView()}</div>
+          <div className="w-full max-w-5xl xl:max-w-7xl 2xl:max-w-[1800px] mx-auto p-4 md:p-10 2xl:p-14">
+            {renderView()}
+          </div>
         </main>
 
         <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center px-2 py-3 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
@@ -607,7 +607,9 @@ export default function App() {
                 }
                 return null;
             })()}
-            <Input label="Data" type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} required />
+            <div className="w-full">
+                <Input label="Data" type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} required />
+            </div>
             
             {!editingId && (
                 <div className="mt-1">
@@ -635,7 +637,9 @@ export default function App() {
         ) : (
           <form onSubmit={handleAddReminder} className="space-y-4">
             <Input label="Título" placeholder="Ex: Consulta Médica..." value={reminderForm.title} onChange={(e) => setReminderForm({...reminderForm, title: e.target.value})} required />
-            <Input label="Data" type="date" value={reminderForm.date} onChange={(e) => setReminderForm({...reminderForm, date: e.target.value})} required />
+            <div className="w-full">
+                <Input label="Data" type="date" value={reminderForm.date} onChange={(e) => setReminderForm({...reminderForm, date: e.target.value})} required />
+            </div>
             <textarea className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-teal dark:text-white" rows="3" placeholder="Ex: Local, horário..." value={reminderForm.details} onChange={(e) => setReminderForm({...reminderForm, details: e.target.value})} />
             <Button type="submit" variant="primary" className="w-full" disabled={actionLoading}>{editingId ? "Salvar Alterações" : "Agendar Lembrete"}</Button>
           </form>
