@@ -12,13 +12,27 @@ const DashboardView = ({
   openModal,
   setView
 }) => {
+  
+  // Função auxiliar para formatar o nome (Primeiro + Último)
+  const getDisplayName = () => {
+      const fullName = user?.user_metadata?.name || 'Desenvolvedor';
+      const parts = fullName.trim().split(/\s+/); // Divide por espaços
+      
+      if (parts.length > 1) {
+          // Pega o primeiro e o último item do array
+          return `${parts[0]} ${parts[parts.length - 1]}`;
+      }
+      return fullName; // Se tiver só um nome, retorna ele mesmo
+  };
+
   return (
     <div className="animate-fadeIn font-inter pb-32 md:pb-0 md:max-h-[calc(100vh-120px)]">
 
       <div className="flex justify-between items-start mb-6 gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-teal dark:text-white font-poppins">
-            Olá, {user?.user_metadata?.name?.split(' ')[0] || 'Desenvolvedor'}!
+            {/* Chamada da função de formatação aqui */}
+            Olá, {getDisplayName()}!
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
             Aqui está o seu resumo.

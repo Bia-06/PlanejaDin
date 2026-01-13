@@ -11,12 +11,63 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
     }));
   };
 
+  // Funções auxiliares para calcular strings de data
+  const getDateString = (offset = 0) => {
+      const d = new Date();
+      d.setDate(d.getDate() + offset);
+      return d.toISOString().split('T')[0];
+  };
+
+  const getMonthDates = () => {
+      const today = new Date();
+      const first = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+      const last = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+      return { start: first, end: last };
+  };
+
+  const setQuickDate = (type) => {
+    let start = '';
+    let end = '';
+
+    if (type === 'today') {
+        const str = getDateString(0);
+        start = str; end = str;
+    } else if (type === 'yesterday') {
+        const str = getDateString(-1);
+        start = str; end = str;
+    } else if (type === 'tomorrow') {
+        const str = getDateString(1);
+        start = str; end = str;
+    } else if (type === 'month') {
+        const dates = getMonthDates();
+        start = dates.start; end = dates.end;
+    } else if (type === 'all') {
+        start = ''; end = '';
+    }
+
+    onFilter(prev => ({
+        ...prev,
+        startDate: start,
+        endDate: end
+    }));
+  };
+
+  // Verificações para estilo ativo
+  const isTodayActive = initialFilters.startDate === getDateString(0) && initialFilters.endDate === getDateString(0);
+  const isYesterdayActive = initialFilters.startDate === getDateString(-1) && initialFilters.endDate === getDateString(-1);
+  const isTomorrowActive = initialFilters.startDate === getDateString(1) && initialFilters.endDate === getDateString(1);
+  const monthDates = getMonthDates();
+  const isMonthActive = initialFilters.startDate === monthDates.start && initialFilters.endDate === monthDates.end;
+
   const hasActiveFilters = 
     initialFilters.type !== 'all' || 
     initialFilters.category !== 'all' || 
     initialFilters.status !== 'all' || 
     initialFilters.startDate !== '' || 
     initialFilters.endDate !== '';
+
+  const activeButtonStyle = "bg-mint text-white border-transparent shadow-md font-bold";
+  const inactiveButtonStyle = "bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300";
 
   return (
     <div className="relative">
@@ -69,6 +120,38 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
               </div>
 
               <div className="space-y-4">
+                
+                {/* --- FILTROS RÁPIDOS DE DATA (COM DESTAQUE) --- */}
+                <div>
+                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Filtro Rápido</label>
+                      <div className="grid grid-cols-2 gap-2">
+                         <button 
+                            onClick={() => setQuickDate('yesterday')} 
+                            className={`text-xs py-1.5 px-2 rounded border transition-colors ${isYesterdayActive ? activeButtonStyle : inactiveButtonStyle}`}
+                         >
+                            Ontem
+                         </button>
+                         <button 
+                            onClick={() => setQuickDate('today')} 
+                            className={`text-xs py-1.5 px-2 rounded border transition-colors ${isTodayActive ? activeButtonStyle : inactiveButtonStyle}`}
+                         >
+                            Hoje
+                         </button>
+                         <button 
+                            onClick={() => setQuickDate('tomorrow')} 
+                            className={`text-xs py-1.5 px-2 rounded border transition-colors ${isTomorrowActive ? activeButtonStyle : inactiveButtonStyle}`}
+                         >
+                            Amanhã
+                         </button>
+                         <button 
+                            onClick={() => setQuickDate('month')} 
+                            className={`text-xs py-1.5 px-2 rounded border transition-colors ${isMonthActive ? activeButtonStyle : inactiveButtonStyle}`}
+                         >
+                            Este Mês
+                         </button>
+                      </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Tipo</label>
                   <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
@@ -122,7 +205,7 @@ const Filters = ({ onFilter, categories, initialFilters }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Período</label>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5">Período (Manual)</label>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="relative">
                       <input

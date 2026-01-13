@@ -16,7 +16,7 @@ const HeroSection = ({ onLoginClick }) => {
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-medium mb-6 animate-fade-in">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Versão 1.0.31 (BETA)
+              Versão 1.0.32 (BETA)
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 leading-tight mb-6 animate-fade-up">

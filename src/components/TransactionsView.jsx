@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   ArrowUp, ArrowDown, Search, Plus, 
-  Clock, AlertCircle, CheckCircle, Trash2, X, Pencil 
+  Clock, AlertCircle, CheckCircle, Trash2, X, Pencil, CreditCard 
 } from 'lucide-react';
 import Button from './UI/Button';
 import Filters from './Filters';
@@ -14,6 +14,8 @@ const TransactionsView = ({
   searchTerm, 
   setSearchTerm, 
   categoryOptions, 
+  categories = [], 
+  paymentMethods = [], // NOVA PROP: Recebe as formas de pagamento
   openModal, 
   handleToggleStatus, 
   handleDelete,
@@ -147,6 +149,14 @@ const TransactionsView = ({
             const isOverdue = item.status === 'pending' && item.date < today;
             const isSelected = selectedIds.includes(item.id);
             
+            // LÓGICA DE COR DA CATEGORIA
+            const catObj = categories.find(c => c.name === item.category);
+            const catColor = catObj ? catObj.color : '#2DD4BF';
+
+            // LÓGICA DE COR DA FORMA DE PAGAMENTO
+            const pmObj = paymentMethods.find(pm => pm.name === item.payment_method);
+            const pmColor = pmObj ? pmObj.color : '#2DD4BF';
+
             return (
               <div 
                 key={item.id} 
@@ -174,12 +184,20 @@ const TransactionsView = ({
                     <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-0.5 flex flex-wrap items-center gap-2">
                       <span className={isOverdue ? "text-red-500 font-bold" : ""}>{formatDate(item.date)}</span>
                       
-                      <span className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs flex items-center gap-1">
+                      {/* CATEGORIA COLORIDA */}
+                      <span 
+                        className="px-2 py-0.5 rounded text-xs flex items-center gap-1 border"
+                        style={{ 
+                            backgroundColor: `${catColor}15`, // 15% opacidade
+                            color: catColor,
+                            borderColor: `${catColor}30` // 30% opacidade
+                        }}
+                      >
                         {item.category}
                         {item.subcategory && (
                            <>
-                             <span className="text-gray-400">›</span>
-                             <span className="text-teal dark:text-mint">{item.subcategory}</span>
+                             <span className="opacity-50">›</span>
+                             <span>{item.subcategory}</span>
                            </>
                         )}
                       </span>
@@ -196,11 +214,7 @@ const TransactionsView = ({
                         </span>
                       )}
 
-                      {item.status === 'paid' && (
-                        <span className="flex items-center gap-1 text-xs font-bold bg-mint/10 text-mint px-2 py-0.5 rounded border border-mint/20">
-                          <CheckCircle className="w-3 h-3" /> Pago
-                        </span>
-                      )}
+                      {/* REMOVIDO "PAGO" DAQUI DA ESQUERDA - AGORA ESTÁ APENAS NO BOTÃO */}
                     </p>
                   </div>
                 </div>
@@ -213,15 +227,20 @@ const TransactionsView = ({
                   <div className="flex items-center gap-2 mt-0 md:mt-2">
                     <button 
                       onClick={() => handleToggleStatus(item)} 
+                      style={item.status === 'paid' ? {
+                          backgroundColor: `${pmColor}15`, 
+                          color: pmColor,
+                          borderColor: `${pmColor}30`
+                      } : {}}
                       className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition-colors border ${
                         item.status === 'paid' 
-                          ? 'bg-mint/10 text-mint border-transparent hover:bg-mint/20' 
+                          ? '' // Estilos inline definidos acima para cor dinâmica
                           : 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:border-amber-800'
                       }`}
                     >
                       {item.status === 'paid' ? (
                         <>
-                          <CheckCircle className="w-3.5 h-3.5" /> Pago
+                          <CheckCircle className="w-3.5 h-3.5" /> Pago - {item.payment_method}
                         </>
                       ) : (
                         <>
