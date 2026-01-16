@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { 
   ChevronLeft, ChevronRight, CalendarIcon, CheckCircle, 
   Clock, AlertCircle, Star, PieChart, Search, Check, X, Trash2,
-  RotateCcw
+  RotateCcw, Lock
 } from 'lucide-react';
 import Card from './UI/Card';
 import { formatDate, formatCurrency } from '../utils/formatters';
@@ -15,8 +15,10 @@ const CalendarView = ({
   onDeleteTransaction, 
   onDeleteReminder,
   onToggleReminder,
-  onToggleStatus
+  onToggleStatus,
+  isPro = false
 }) => {
+
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   
@@ -65,14 +67,14 @@ const CalendarView = ({
     return { transactions: dayTransactions, reminders: dayReminders };
   };
 
-const getDayEventsSummary = (day) => {
+  const getDayEventsSummary = (day) => {
     const { transactions, reminders } = getItemsForDay(day);
-    const hasIncome = transactions.some(t => t.type === 'income');
-    const hasPendingExpense = transactions.some(t => t.type === 'expense' && t.status === 'pending');
-    const hasPaidExpense = transactions.some(t => t.type === 'expense' && t.status === 'paid');
-    const hasReminder = reminders.some(r => r.status !== 'completed');
-    
-    return { hasIncome, hasPendingExpense, hasPaidExpense, hasReminder };
+    return { 
+        hasIncome: transactions.some(t => t.type === 'income'),
+        hasPendingExpense: transactions.some(t => t.type === 'expense' && t.status === 'pending'),
+        hasPaidExpense: transactions.some(t => t.type === 'expense' && t.status === 'paid'),
+        hasReminder: reminders.some(r => r.status !== 'completed')
+    };
   };
 
   const navigateMonth = (direction) => {
@@ -95,7 +97,7 @@ const getDayEventsSummary = (day) => {
     (t.category && t.category.toLowerCase().includes(searchDayQuery.toLowerCase()))
   );
 
-const categorySummary = useMemo(() => {
+  const categorySummary = useMemo(() => {
     const summary = {};
     selectedDayEvents.transactions.forEach(t => {
       const catName = t.category || 'Outros';
@@ -104,7 +106,7 @@ const categorySummary = useMemo(() => {
             name: catName, 
             total: 0, 
             type: t.type, 
-            count: 0,
+            count: 0, 
             hasPending: false 
         };
       }
@@ -133,7 +135,7 @@ const categorySummary = useMemo(() => {
       }
   };
 
-    const confirmDeleteTransaction = (id) => {
+  const confirmDeleteTransaction = (id) => {
     if (window.confirm("Tem certeza que deseja excluir esta movimentação?")) {
         if (onDeleteTransaction) onDeleteTransaction(id);
     }
@@ -251,8 +253,8 @@ const categorySummary = useMemo(() => {
 
                     <div className="flex gap-0.5 md:gap-1 mb-1 md:mb-2 justify-center md:justify-start w-full flex-wrap">
                       {events.hasIncome && <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-mint" title="Receita"></div>}
-                      {events.hasExpense && <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-red-500" title="Despesa"></div>}
-                      {events.hasPending && <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-yellow" title="Pendente"></div>}
+                      {events.hasPendingExpense && <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-red-500" title="Despesa Pendente"></div>}
+                      {events.hasPaidExpense && <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-gray-400" title="Despesa Paga"></div>}
                       {events.hasReminder && <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-purple-500" title="Lembrete"></div>}
                     </div>
         
@@ -262,7 +264,8 @@ const categorySummary = useMemo(() => {
                             {holidayName}
                           </div>
                       )}
-                      {getItemsForDay(day).transactions.slice(0, holidayName ? 1 : 2).map((t) => (
+                      
+                      {isPro && getItemsForDay(day).transactions.slice(0, holidayName ? 1 : 2).map((t) => (
                         <div key={t.id} className={`text-[10px] px-1 py-0.5 rounded truncate w-full text-left border ${
                             t.type === 'income' ? 'bg-mint/10 text-mint border-mint/20' : 
                             t.status === 'pending' ? 'bg-red-50 text-red-500 border-red-100 dark:bg-red-900/20 dark:border-red-800' : 
@@ -317,267 +320,286 @@ const categorySummary = useMemo(() => {
           </Card>
         </div>
       </div>
-      <Card className="p-0 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-mint/10 rounded-xl shrink-0">
-                        <CalendarIcon className="w-6 h-6 text-mint" />
+
+      <Card className="p-0 overflow-hidden relative">
+            {!isPro && (
+                <div className="absolute inset-0 z-50 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm flex items-center justify-center">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl text-center border border-gray-100 dark:border-gray-700 max-w-sm mx-4">
+                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Lock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">Agenda Detalhada Bloqueada</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+                            A visualização de detalhes da agenda diária é exclusiva para assinantes do Plano Pro.
+                        </p>
+                        <button className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-xl text-sm transition-colors w-full">
+                            Quero ser Pro
+                        </button>
                     </div>
-                    <div>
-                        <h3 className="font-bold text-lg text-teal dark:text-white leading-tight">Agenda de {selectedDayEvents.date}</h3>
-                        {checkHoliday(selectedDay, month) && (
-                           <p className="text-xs font-bold text-yellow-600 dark:text-yellow flex items-center gap-1 mt-0.5">
-                             <Star size={10} className="fill-yellow" /> {checkHoliday(selectedDay, month)}
-                           </p>
-                        )}
+                </div>
+            )}
+
+            <div className={!isPro ? "filter blur-sm pointer-events-none select-none" : ""}>
+                <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-mint/10 rounded-xl shrink-0">
+                            <CalendarIcon className="w-6 h-6 text-mint" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-lg text-teal dark:text-white leading-tight">Agenda de {selectedDayEvents.date}</h3>
+                            {checkHoliday(selectedDay, month) && (
+                                <p className="text-xs font-bold text-yellow-600 dark:text-yellow flex items-center gap-1 mt-0.5">
+                                 <Star size={10} className="fill-yellow" /> {checkHoliday(selectedDay, month)}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="relative w-full md:w-64">
+                        <input 
+                            type="text" 
+                            placeholder="Buscar conta neste dia..." 
+                            value={searchDayQuery}
+                            onChange={(e) => setSearchDayQuery(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-teal/20 outline-none text-teal dark:text-white transition-all"
+                        />
+                        <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
                     </div>
                 </div>
 
-                <div className="relative w-full md:w-64">
-                    <input 
-                        type="text" 
-                        placeholder="Buscar conta neste dia..." 
-                        value={searchDayQuery}
-                        onChange={(e) => setSearchDayQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 text-sm focus:ring-2 focus:ring-teal/20 outline-none text-teal dark:text-white transition-all"
-                    />
-                    <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3.5" />
-                </div>
-            </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                        <div className="bg-mint/5 border border-mint/20 rounded-xl p-4 flex items-center justify-between">
+                             <div>
+                                <p className="text-xs font-bold text-mint/80 uppercase tracking-wide">Receitas</p>
+                                <p className="text-xl font-bold text-mint mt-1">
+                                    {formatCurrency(selectedDayEvents.transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0))}
+                                </p>
+                             </div>
+                             <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                                 <PieChart className="w-5 h-5 text-mint" />
+                             </div>
+                        </div>
 
-            <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <div className="bg-mint/5 border border-mint/20 rounded-xl p-4 flex items-center justify-between">
-                         <div>
-                            <p className="text-xs font-bold text-mint/80 uppercase tracking-wide">Receitas</p>
-                            <p className="text-xl font-bold text-mint mt-1">
-                                {formatCurrency(selectedDayEvents.transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0))}
-                            </p>
-                         </div>
-                         <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                             <PieChart className="w-5 h-5 text-mint" />
-                         </div>
-                    </div>
+                        <div className="bg-red-50 border border-red-100 dark:bg-red-900/10 dark:border-red-900/30 rounded-xl p-4 flex items-center justify-between">
+                             <div>
+                                <p className="text-xs font-bold text-red-500/80 uppercase tracking-wide">Despesas</p>
+                                <p className="text-xl font-bold text-red-500 mt-1">
+                                    {formatCurrency(selectedDayEvents.transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0))}
+                                </p>
+                             </div>
+                             <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                                 <PieChart className="w-5 h-5 text-red-500" />
+                             </div>
+                        </div>
 
-                    <div className="bg-red-50 border border-red-100 dark:bg-red-900/10 dark:border-red-900/30 rounded-xl p-4 flex items-center justify-between">
-                         <div>
-                            <p className="text-xs font-bold text-red-500/80 uppercase tracking-wide">Despesas</p>
-                            <p className="text-xl font-bold text-red-500 mt-1">
-                                {formatCurrency(selectedDayEvents.transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0))}
-                            </p>
-                         </div>
-                         <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                             <PieChart className="w-5 h-5 text-red-500" />
-                         </div>
-                    </div>
-
-                    <div className="bg-gray-50 border border-gray-100 dark:bg-gray-800 dark:border-gray-700 rounded-xl p-4 flex items-center justify-between">
-                         <div>
-                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Saldo do Dia</p>
-                            <p className={`text-xl font-bold mt-1 ${
-                                (selectedDayEvents.transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0) - 
-                                selectedDayEvents.transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0)) >= 0 
-                                ? 'text-teal dark:text-white' : 'text-red-500'
-                            }`}>
-                                {formatCurrency(
-                                    selectedDayEvents.transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0) - 
-                                    selectedDayEvents.transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0)
-                                )}
-                            </p>
-                         </div>
-                         <div className="p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm">
-                             <Clock className="w-5 h-5 text-gray-400" />
-                         </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <h4 className="font-bold text-teal dark:text-white mb-4 flex items-center gap-2">
-                            Movimentações <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{filteredDayTransactions.length}</span>
-                        </h4>
-                        
-                        <div className="space-y-3">
-                        {filteredDayTransactions.length > 0 ? (
-                            filteredDayTransactions.map(t => {
-                                const styles = getTransactionStyle(t);
-                                return (
-                                <div key={t.id} className={`group relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border shadow-sm hover:shadow-md transition-all gap-4 ${styles.bg} ${styles.border}`}>
-                                    
-                                    {paymentModal.open && paymentModal.transaction?.id === t.id && (
-                                        <div className="absolute inset-0 bg-white dark:bg-gray-800 z-20 rounded-xl flex flex-col justify-center px-4 animate-fadeIn border-2 border-mint shadow-lg">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <CheckCircle className="w-4 h-4 text-mint" />
-                                                <p className="text-xs font-bold text-gray-500">Confirmar pagamento via:</p>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <div className="flex-1 min-w-0">
-                                                    <select 
-                                                        value={selectedMethod}
-                                                        onChange={(e) => setSelectedMethod(e.target.value)}
-                                                        className="w-full text-sm p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-teal dark:text-white outline-none focus:border-mint"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                        <option value="">Selecione...</option>
-                                                        {paymentMethods.map(pm => (
-                                                            <option key={pm.id} value={pm.name}>{pm.name}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <button onClick={(e) => { e.stopPropagation(); handleConfirmPay(); }} className="p-2 bg-mint text-white rounded-lg hover:bg-teal transition-colors shadow-sm">
-                                                    <Check size={16} />
-                                                </button>
-                                                <button onClick={(e) => { e.stopPropagation(); setPaymentModal({open:false, transaction:null}); }} className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-                                                    <X size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
+                        <div className="bg-gray-50 border border-gray-100 dark:bg-gray-800 dark:border-gray-700 rounded-xl p-4 flex items-center justify-between">
+                             <div>
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Saldo do Dia</p>
+                                <p className={`text-xl font-bold mt-1 ${
+                                    (selectedDayEvents.transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0) - 
+                                    selectedDayEvents.transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0)) >= 0 
+                                    ? 'text-teal dark:text-white' : 'text-red-500'
+                                }`}>
+                                    {formatCurrency(
+                                        selectedDayEvents.transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0) - 
+                                        selectedDayEvents.transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0)
                                     )}
+                                </p>
+                             </div>
+                             <div className="p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm">
+                                 <Clock className="w-5 h-5 text-gray-400" />
+                             </div>
+                        </div>
+                    </div>
 
-                                    <div className="flex items-start gap-4 flex-1 min-w-0 w-full">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${styles.iconBg}`}>
-                                            {styles.icon}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className={`font-bold text-sm break-words whitespace-normal leading-snug ${styles.text}`}>{t.description}</p>
-                                            <p className="text-xs text-gray-500 mt-1 break-words whitespace-normal">
-                                                {t.category || 'Geral'} • {t.payment_method || '---'}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pl-14 sm:pl-0">
-                                        <p className={`font-bold whitespace-nowrap ${styles.text}`}>
-                                            {formatCurrency(t.amount)}
-                                        </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 className="font-bold text-teal dark:text-white mb-4 flex items-center gap-2">
+                                Movimentações <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{filteredDayTransactions.length}</span>
+                            </h4>
+                            
+                            <div className="space-y-3">
+                            {filteredDayTransactions.length > 0 ? (
+                                filteredDayTransactions.map(t => {
+                                    const styles = getTransactionStyle(t);
+                                    return (
+                                    <div key={t.id} className={`group relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border shadow-sm hover:shadow-md transition-all gap-4 ${styles.bg} ${styles.border}`}>
                                         
-                                        <div className="flex items-center gap-1 shrink-0">
-                                            {t.type === 'expense' && t.status === 'pending' && (
+                                        {paymentModal.open && paymentModal.transaction?.id === t.id && (
+                                            <div className="absolute inset-0 bg-white dark:bg-gray-800 z-20 rounded-xl flex flex-col justify-center px-4 animate-fadeIn border-2 border-mint shadow-lg">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <CheckCircle className="w-4 h-4 text-mint" />
+                                                    <p className="text-xs font-bold text-gray-500">Confirmar pagamento via:</p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <div className="flex-1 min-w-0">
+                                                        <select 
+                                                            value={selectedMethod}
+                                                            onChange={(e) => setSelectedMethod(e.target.value)}
+                                                            className="w-full text-sm p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-teal dark:text-white outline-none focus:border-mint"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <option value="">Selecione...</option>
+                                                            {paymentMethods.map(pm => (
+                                                                <option key={pm.id} value={pm.name}>{pm.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <button onClick={(e) => { e.stopPropagation(); handleConfirmPay(); }} className="p-2 bg-mint text-white rounded-lg hover:bg-teal transition-colors shadow-sm">
+                                                        <Check size={16} />
+                                                    </button>
+                                                    <button onClick={(e) => { e.stopPropagation(); setPaymentModal({open:false, transaction:null}); }} className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-start gap-4 flex-1 min-w-0 w-full">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${styles.iconBg}`}>
+                                                {styles.icon}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className={`font-bold text-sm break-words whitespace-normal leading-snug ${styles.text}`}>{t.description}</p>
+                                                <p className="text-xs text-gray-500 mt-1 break-words whitespace-normal">
+                                                    {t.category || 'Geral'} • {t.payment_method || '---'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pl-14 sm:pl-0">
+                                            <p className={`font-bold whitespace-nowrap ${styles.text}`}>
+                                                {formatCurrency(t.amount)}
+                                            </p>
+                                            
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                {t.type === 'expense' && t.status === 'pending' && (
+                                                    <button 
+                                                        onClick={() => handleOpenPayModal(t)}
+                                                        className="w-8 h-8 rounded-full bg-white hover:bg-mint hover:text-white text-gray-400 border border-gray-200 hover:border-mint transition-all flex items-center justify-center shadow-sm"
+                                                        title="Dar baixa (Pagar)"
+                                                    >
+                                                        <Check size={16} strokeWidth={2.5} />
+                                                    </button>
+                                                )}
+                                                {t.type === 'expense' && t.status === 'paid' && (
+                                                    <button 
+                                                        onClick={() => {
+                                                            if(window.confirm("Deseja desfazer a baixa e tornar pendente novamente?")) {
+                                                                onToggleStatus(t);
+                                                            }
+                                                        }}
+                                                        className="w-8 h-8 rounded-full bg-white hover:bg-orange-500 hover:text-white text-gray-400 border border-gray-200 hover:border-orange-500 transition-all flex items-center justify-center shadow-sm"
+                                                        title="Desfazer baixa (Tornar pendente)"
+                                                    >
+                                                        <RotateCcw size={16} />
+                                                    </button>
+                                                )}
+
                                                 <button 
-                                                    onClick={() => handleOpenPayModal(t)}
-                                                    className="w-8 h-8 rounded-full bg-white hover:bg-mint hover:text-white text-gray-400 border border-gray-200 hover:border-mint transition-all flex items-center justify-center shadow-sm"
-                                                    title="Dar baixa (Pagar)"
+                                                    onClick={() => confirmDeleteTransaction(t.id)}
+                                                    className="w-8 h-8 rounded-full bg-white hover:bg-red-500 hover:text-white text-gray-400 border border-gray-200 hover:border-red-500 transition-all flex items-center justify-center shadow-sm"
+                                                    title="Excluir movimentação"
                                                 >
-                                                    <Check size={16} strokeWidth={2.5} />
+                                                    <Trash2 size={16} />
                                                 </button>
-                                            )}
-                                            {t.type === 'expense' && t.status === 'paid' && (
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="text-center py-10 text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                                    <Search className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                                    <p className="text-sm font-medium">
+                                        {searchDayQuery ? 'Nenhuma conta encontrada para esta busca' : 'Nenhuma movimentação neste dia'}
+                                    </p>
+                                </div>
+                            )}
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div>
+                                 <h4 className="font-bold text-teal dark:text-white mb-4 flex items-center gap-2">
+                                    Lembretes <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedDayEvents.reminders.length}</span>
+                                </h4>
+                                <div className="space-y-3">
+                                    {selectedDayEvents.reminders.length > 0 ? (
+                                        selectedDayEvents.reminders.map((r) => (
+                                        <div key={r.id} className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/10 rounded-xl border border-purple-100 dark:border-purple-800">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="p-2 bg-white dark:bg-purple-900/40 rounded-lg shrink-0">
+                                                    <AlertCircle className="w-5 h-5 text-purple-500" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-teal dark:text-white text-sm truncate">{r.title}</p>
+                                                    {r.details && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{r.details}</p>}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex gap-1 ml-2">
                                                 <button 
                                                     onClick={() => {
-                                                        if(window.confirm("Deseja desfazer a baixa e tornar pendente novamente?")) {
-                                                            onToggleStatus(t);
-                                                        }
+                                                        if(onToggleReminder) onToggleReminder(r);
                                                     }}
-                                                    className="w-8 h-8 rounded-full bg-white hover:bg-orange-500 hover:text-white text-gray-400 border border-gray-200 hover:border-orange-500 transition-all flex items-center justify-center shadow-sm"
-                                                    title="Desfazer baixa (Tornar pendente)"
+                                                    className={`p-1.5 rounded-lg transition-colors ${
+                                                        r.status === 'completed' 
+                                                        ? 'text-green-600 bg-green-100' 
+                                                        : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                                                    }`}
+                                                    title={r.status === 'completed' ? "Reabrir" : "Concluir"}
                                                 >
-                                                    <RotateCcw size={16} />
+                                                    <CheckCircle size={18} />
                                                 </button>
-                                            )}
-
-                                            <button 
-                                                onClick={() => confirmDeleteTransaction(t.id)}
-                                                className="w-8 h-8 rounded-full bg-white hover:bg-red-500 hover:text-white text-gray-400 border border-gray-200 hover:border-red-500 transition-all flex items-center justify-center shadow-sm"
-                                                title="Excluir movimentação"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                                <button 
+                                                    onClick={() => confirmDeleteReminder(r.id)}
+                                                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                                    title="Excluir"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-6 text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                                            <p className="text-xs">Sem lembretes para hoje</p>
+                                        </div>
+                                    )}
                                 </div>
-                                );
-                            })
-                        ) : (
-                            <div className="text-center py-10 text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
-                                <Search className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                                <p className="text-sm font-medium">
-                                    {searchDayQuery ? 'Nenhuma conta encontrada para esta busca' : 'Nenhuma movimentação neste dia'}
-                                </p>
                             </div>
-                        )}
-                        </div>
-                    </div>
 
-                    <div className="space-y-6">
-                        <div>
-                             <h4 className="font-bold text-teal dark:text-white mb-4 flex items-center gap-2">
-                                Lembretes <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedDayEvents.reminders.length}</span>
-                            </h4>
-                            <div className="space-y-3">
-                                {selectedDayEvents.reminders.length > 0 ? (
-                                    selectedDayEvents.reminders.map((r) => (
-                                    <div key={r.id} className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/10 rounded-xl border border-purple-100 dark:border-purple-800">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="p-2 bg-white dark:bg-purple-900/40 rounded-lg shrink-0">
-                                                <AlertCircle className="w-5 h-5 text-purple-500" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="font-bold text-teal dark:text-white text-sm truncate">{r.title}</p>
-                                                {r.details && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{r.details}</p>}
-                                            </div>
+                             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
+                                <h4 className="font-bold text-gray-600 dark:text-gray-300 mb-4 text-xs uppercase tracking-wider flex justify-between">
+                                    <span>Por Categoria</span>
+                                    <span>Total</span>
+                                </h4>
+                                <div className="space-y-3">
+                                    {categorySummary.length > 0 ? categorySummary.map((cat) => (
+                                        <div key={cat.name} className="flex justify-between text-sm items-center">
+                                          <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${
+                                                cat.type === 'income' 
+                                                    ? 'bg-mint' 
+                                                    : (cat.hasPending ? 'bg-red-500' : 'bg-gray-400') 
+                                            }`}></div>
+                                            <span className="text-gray-700 dark:text-gray-300 font-medium">
+                                                {cat.name} <span className="text-gray-400 text-xs font-normal">({cat.count})</span>
+                                            </span>
+                                          </div>
+                                            <span className="font-bold text-gray-800 dark:text-white">{formatCurrency(cat.total)}</span>
                                         </div>
-                                        
-                                        <div className="flex gap-1 ml-2">
-                                          <button 
-                                            onClick={() => {
-                                                if(onToggleReminder) onToggleReminder(r);
-                                            }}
-                                            className={`p-1.5 rounded-lg transition-colors ${
-                                                r.status === 'completed' 
-                                                ? 'text-green-600 bg-green-100' 
-                                                : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
-                                            }`}
-                                            title={r.status === 'completed' ? "Reabrir" : "Concluir"}
-                                          >
-                                            <CheckCircle size={18} />
-                                          </button>
-                                            <button 
-                                                onClick={() => confirmDeleteReminder(r.id)}
-                                                className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                                                title="Excluir"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-6 text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
-                                        <p className="text-xs">Sem lembretes para hoje</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
-                            <h4 className="font-bold text-gray-600 dark:text-gray-300 mb-4 text-xs uppercase tracking-wider flex justify-between">
-                                <span>Por Categoria</span>
-                                <span>Total</span>
-                            </h4>
-                            <div className="space-y-3">
-                                {categorySummary.length > 0 ? categorySummary.map((cat) => (
-                                    <div key={cat.name} className="flex justify-between text-sm items-center">
-                                      <div className="flex items-center gap-2">
-                                        <div className={`w-2 h-2 rounded-full ${
-                                            cat.type === 'income' 
-                                                ? 'bg-mint' 
-                                                : (cat.hasPending ? 'bg-red-500' : 'bg-gray-400') 
-                                        }`}></div>
-                                        <span className="text-gray-700 dark:text-gray-300 font-medium">
-                                            {cat.name} <span className="text-gray-400 text-xs font-normal">({cat.count})</span>
-                                        </span>
-                                      </div>
-                                        <span className="font-bold text-gray-800 dark:text-white">{formatCurrency(cat.total)}</span>
-                                    </div>
-                                )) : <p className="text-xs text-gray-400 text-center py-2">Sem dados</p>}
+                                    )) : <p className="text-xs text-gray-400 text-center py-2">Sem dados</p>}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
       </Card>
-
     </div>
   );
 };

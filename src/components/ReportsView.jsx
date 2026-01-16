@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  TrendingUp, TrendingDown, PieChart as PieChartIcon, Download, Filter, CreditCard, Wallet
+  TrendingUp, TrendingDown, PieChart as PieChartIcon, Download, Filter, CreditCard, Wallet, Lock
 } from 'lucide-react'; 
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -9,13 +9,57 @@ import {
 import Card from './UI/Card';
 import Button from './UI/Button';
 import { formatCurrency } from '../utils/formatters';
-import { THEME, CHART_COLORS } from '../config/constants';
 
-const ReportsView = ({ transactions = [], categories = [], paymentMethods = [] }) => {
+const THEME = {
+  mint: '#2DD4BF',
+  teal: '#0F766E',
+  yellow: '#F59E0B',
+};
+
+const CHART_COLORS = ['#2DD4BF', '#0F766E', '#F59E0B', '#F43F5E', '#8B5CF6', '#EC4899'];
+
+const ReportsView = ({ 
+  transactions = [], 
+  categories = [], 
+  paymentMethods = [], 
+  isPro = false
+}) => {
   const [timeRange, setTimeRange] = useState('currentMonth'); 
   const [chartType, setChartType] = useState('composed');
   
   const FALLBACK_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
+
+  if (!isPro) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fadeIn p-4">
+         <div className="bg-amber-100 dark:bg-amber-900/30 p-8 rounded-full mb-6 border border-amber-200 dark:border-amber-700 relative">
+            <Lock className="w-16 h-16 text-amber-600 dark:text-amber-500" />
+            <div className="absolute bottom-0 right-0 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg border border-gray-100 dark:border-gray-700">
+               <TrendingUp className="w-6 h-6 text-mint" />
+            </div>
+         </div>
+         <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">Relatórios Premium</h2>
+         <p className="text-gray-500 dark:text-gray-400 max-w-md mb-8 leading-relaxed">
+           Desbloqueie análises profundas, gráficos de evolução mensal, distribuição por categorias e comparativos anuais. Entenda para onde seu dinheiro está indo.
+         </p>
+         
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg w-full mb-8">
+            <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-3 opacity-75">
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg"><PieChartIcon className="w-5 h-5 text-blue-600" /></div>
+                <span className="text-sm font-bold text-gray-600 dark:text-gray-300">Gráficos de Pizza</span>
+            </div>
+            <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-3 opacity-75">
+                <div className="bg-mint/10 p-2 rounded-lg"><TrendingUp className="w-5 h-5 text-mint" /></div>
+                <span className="text-sm font-bold text-gray-600 dark:text-gray-300">Evolução Mensal</span>
+            </div>
+         </div>
+
+         <Button variant="primary" className="px-8 py-3 text-lg shadow-xl shadow-mint/20 hover:shadow-mint/40 transform hover:-translate-y-1 transition-all">
+           Fazer Upgrade Agora
+         </Button>
+      </div>
+    );
+  }
 
   const filteredTransactions = useMemo(() => {
     const now = new Date();

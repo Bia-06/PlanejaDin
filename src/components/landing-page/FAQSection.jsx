@@ -17,7 +17,7 @@ const faqs = [
   },
   {
     question: "Meus dados financeiros estão seguros?",
-    answer: "Sua segurança é nossa prioridade. Usamos criptografia de ponta a ponta para proteger seus dados. Não vendemos suas informações.",
+    answer: "Sua segurança é nossa prioridade. Temos rigorosos controles de acesso para proteger seus dados. Não vendemos suas informações.",
   },
   {
     question: "Funciona no celular e no computador?",

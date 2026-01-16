@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { 
   User, Camera, Sun, Moon, LogOut, 
-  Mail, Lock, Phone, Eye, EyeOff, Loader, Trash2, Info 
+  Mail, Lock, Phone, Eye, EyeOff, Loader, Trash2, Info,
+  Crown, ShieldCheck, Zap, CheckCircle2, AlertTriangle
 } from 'lucide-react';
 import { supabase } from '../config/supabase'; 
 import Card from './UI/Card';
@@ -12,7 +13,9 @@ const SettingsView = ({
   user, 
   isDarkMode, 
   setIsDarkMode,
-  onLogout
+  onLogout,
+  isPro,
+  customRole
 }) => {
   const [formData, setFormData] = useState({
     name: user?.user_metadata?.name || '',
@@ -25,8 +28,12 @@ const SettingsView = ({
   const [avatarPreview, setAvatarPreview] = useState(user?.user_metadata?.avatar_url || null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmationInput, setDeleteConfirmationInput] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+
   const [isSaving, setIsSaving] = useState(false);
   
   const fileInputRef = useRef(null);
@@ -156,45 +163,125 @@ const SettingsView = ({
     }
   };
 
-  const handleLogout = async () => {
-    if (window.confirm("Tem certeza que deseja sair da conta?")) {
-      setIsLoggingOut(true);
-      try {
-        await onLogout();
-      } catch (error) {
-        alert("Erro ao sair.");
-      } finally {
-        setIsLoggingOut(false);
-      }
+  const handleLogoutClick = () => {
+      setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await onLogout();
+    } catch (error) {
+      alert("Erro ao sair.");
+    } finally {
+      setIsLoggingOut(false);
+      setShowLogoutConfirm(false);
     }
   };
 
-  const handleDeleteAccount = async () => {
-    const confirmation = window.confirm("ATENÇÃO: Essa ação é irreversível!\n\nIsso apagará TODOS os seus dados (transações, categorias, lembretes). Tem certeza absoluta?");
-    
-    if (confirmation) {
-        const doubleCheck = window.prompt("Digite 'DELETAR' para confirmar a exclusão:");
-        if (doubleCheck !== 'DELETAR') return;
+  const handleDeleteClick = () => {
+    setDeleteConfirmationInput('');
+    setShowDeleteConfirm(true);
+  };
 
-        setIsDeleting(true);
-        try {
-            await supabase.from('transactions').delete().eq('user_id', user.id);
-            await supabase.from('reminders').delete().eq('user_id', user.id);
-            await supabase.from('categories').delete().eq('user_id', user.id);
-            await onLogout();
-            alert("Sua conta foi limpa e desativada.");
-        } catch (error) {
-            console.error("Erro ao excluir conta:", error);
-            alert("Erro ao processar exclusão. Tente novamente.");
-        } finally {
-            setIsDeleting(false);
-        }
+  const confirmDeleteAccount = async () => {
+    if (deleteConfirmationInput !== 'DELETAR') return;
+
+    setIsDeleting(true);
+    try {
+        const { error } = await supabase.rpc('delete_own_account');
+
+        if (error) throw error;
+        
+        await onLogout();
+        
+        alert("Sua conta foi excluída permanentemente.");
+        window.location.reload(); 
+
+    } catch (error) {
+        console.error("Erro ao excluir conta:", error);
+        alert("Erro ao processar exclusão: " + error.message);
+        setIsDeleting(false);
+        setShowDeleteConfirm(false);
     }
   };
 
   const inputStyle = { paddingLeft: '3.5rem', paddingRight: '3rem' };
   const passwordInputStyle = { paddingLeft: '3.5rem', paddingRight: '3rem' };
   const passwordRequirements = validatePasswordRequirements(formData.password);
+
+  const renderPlanCard = () => {
+    if (customRole === 'Desenvolvedora') {
+        return (
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-5 text-white shadow-lg mb-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Zap size={80} />
+                </div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-white/20 p-1.5 rounded-lg"><Zap size={20} className="text-yellow-300" /></div>
+                        <span className="font-bold text-sm uppercase tracking-wider text-purple-100">Nível Dev</span>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-1">Desenvolvedora</h3>
+                    <p className="text-purple-100 text-sm mb-4">Acesso irrestrito ao sistema.</p>
+                    <div className="flex flex-wrap gap-2">
+                          <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1"><CheckCircle2 size={12}/> Tudo Ilimitado</span>
+                          <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1"><CheckCircle2 size={12}/> Admin</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (isPro) {
+        return (
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-5 text-white shadow-lg mb-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Crown size={80} />
+                </div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-white/20 p-1.5 rounded-lg"><Crown size={20} className="text-yellow-200" /></div>
+                        <span className="font-bold text-sm uppercase tracking-wider text-amber-100">Premium</span>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-1">Plano Pro</h3>
+                    <p className="text-amber-100 text-sm mb-4">Sua gestão financeira no nível máximo.</p>
+                    <div className="flex flex-wrap gap-2">
+                          <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1"><CheckCircle2 size={12}/> Transações Ilimitadas</span>
+                          <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1"><CheckCircle2 size={12}/> Relatórios</span>
+                          <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1"><CheckCircle2 size={12}/> Subcategorias</span>
+                          <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1"><CheckCircle2 size={12}/> Formas de Pagamentos</span>
+                          <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1"><CheckCircle2 size={12}/> E muito mais!</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm mb-6 relative overflow-hidden">
+            <div className="flex items-start justify-between relative z-10">
+                <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-gray-100 dark:bg-gray-700 p-1.5 rounded-lg"><ShieldCheck size={20} className="text-gray-500 dark:text-gray-400" /></div>
+                        <span className="font-bold text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400">Básico</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-teal dark:text-white mb-1">Plano Gratuito</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Funcionalidades essenciais ativas.</p>
+                </div>
+                <Button className="text-xs px-3 py-1.5 bg-green-600 text-white hover:bg-green-700 hover:shadow-md transition-all font-bold shadow-sm">
+                    Fazer Upgrade
+                </Button>
+            </div>
+            <div className="space-y-2 mt-2">
+                <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-gray-400 h-full w-[70%]"></div>
+                </div>
+                <p className="text-xs text-gray-400 text-right">Limite de recursos aplicável</p>
+            </div>
+        </div>
+    );
+  };
 
   return (
     <div className="animate-fadeIn pb-24 font-inter">
@@ -315,56 +402,148 @@ const SettingsView = ({
           </div>
         </Card>
 
-        <div className="space-y-6">
+        <div>
           
-          <Card>
-            <h3 className="font-bold text-lg text-teal dark:text-white mb-4 font-poppins">Preferências</h3>
-            <div 
+          {renderPlanCard()}
+
+          <div className="space-y-6">
+            <Card>
+              <h3 className="font-bold text-lg text-teal dark:text-white mb-4 font-poppins">Preferências</h3>
+              <div 
                 className="flex items-center justify-between p-4 bg-bgLight dark:bg-gray-700/50 rounded-xl mb-4 cursor-pointer active:scale-[0.98] transition-transform" 
                 onClick={() => setIsDarkMode(!isDarkMode)}
-            >
-              <div className="flex items-center gap-3">
-                {isDarkMode ? <Moon className="text-teal dark:text-white w-5 h-5" /> : <Sun className="text-yellow w-5 h-5" />}
-                <span className="text-teal font-medium dark:text-gray-200">Modo Escuro</span>
-              </div>
-              <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isDarkMode ? 'bg-mint' : 'bg-gray-300'}`}>
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition transition-transform ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`} />
-              </div>
-            </div>
-            
-            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
-              <Button onClick={handleLogout} variant="secondary" className="w-full flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-600 hover:bg-gray-100" disabled={isLoggingOut}>
-                {isLoggingOut ? <Loader className="animate-spin w-4 h-4" /> : <><LogOut className="w-5 h-5" /> Sair da Conta</>}
-              </Button>
-
-              <button 
-                onClick={handleDeleteAccount}
-                disabled={isDeleting}
-                className="w-full flex items-center justify-center gap-2 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors text-sm font-bold mt-2"
               >
-                 {isDeleting ? <Loader className="animate-spin w-4 h-4" /> : <><Trash2 className="w-4 h-4" /> Excluir Conta</>}
-              </button>
-            </div>
-          </Card>
+                <div className="flex items-center gap-3">
+                  {isDarkMode ? <Moon className="text-teal dark:text-white w-5 h-5" /> : <Sun className="text-yellow w-5 h-5" />}
+                  <span className="text-teal font-medium dark:text-gray-200">Modo Escuro</span>
+                </div>
+                <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isDarkMode ? 'bg-mint' : 'bg-gray-300'}`}>
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition transition-transform ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
+  
+                <button 
+                    onClick={handleLogoutClick}
+                    disabled={isLoggingOut}
+                    className="w-full p-4 flex items-center justify-center gap-2 text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-colors"
+                >
+                    {isLoggingOut ? <Loader className="animate-spin w-5 h-5" /> : <><LogOut size={20} /> Sair da Conta</>}
+                </button>
 
-          <div className="hidden md:block">
-            <Card className="opacity-80 hover:opacity-100 transition-opacity">
-                <div className="flex items-center gap-3 mb-2">
-                <Info className="w-5 h-5 text-mint" />
-                <h3 className="font-bold text-teal dark:text-white">Sobre o App</h3>
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                    <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.0.34 (Beta)</span></p>
-                    <p className="flex justify-between"><span>Última Atualização:</span><span>13 JAN 2026</span></p>
-                <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400">
-                    Feito com 💜 por <a href="https://portfolio--beatriz.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-mint font-bold hover:underline transition-all">Beatriz Pires</a>
-                </div>
-                </div>
+                <button 
+                  onClick={handleDeleteClick}
+                  disabled={isDeleting}
+                  className="w-full p-4 mt-2 flex items-center justify-center gap-2 text-red-600/80 dark:text-red-400/80 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-colors border border-dashed border-red-200 dark:border-red-800"
+                >
+                    {isDeleting ? <Loader className="animate-spin w-4 h-4" /> : <><Trash2 size={18} /> Excluir Conta</>}
+                </button>
+              </div>
             </Card>
-          </div>
 
+            <div className="hidden md:block">
+              <Card className="opacity-80 hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-3 mb-2">
+                  <Info className="w-5 h-5 text-mint" />
+                  <h3 className="font-bold text-teal dark:text-white">Sobre o App</h3>
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                      <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.1.0</span></p>
+                      <p className="flex justify-between"><span>Última Atualização:</span><span>16 JAN 2026</span></p>
+                  <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400">
+                      Feito com 💜 por <a href="https://portfolio--beatriz.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-mint font-bold hover:underline transition-all">Beatriz Pires</a>
+                  </div>
+                  </div>
+              </Card>
+            </div>
+
+          </div>
         </div>
       </div>
+
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-scaleIn border border-gray-100 dark:border-gray-700">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4 text-red-500">
+                <LogOut size={32} />
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Deseja sair?
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">
+                Tem certeza que deseja sair da sua conta? Você precisará fazer login novamente para acessar seus dados.
+              </p>
+
+              <div className="flex gap-3 w-full">
+                <button 
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={confirmLogout}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30 transition-all"
+                >
+                  {isLoggingOut ? <Loader className="animate-spin w-5 h-5 mx-auto" /> : "Sair"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-scaleIn border-2 border-red-100 dark:border-red-900/50">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4 text-red-600 animate-pulse">
+                <AlertTriangle size={32} />
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Excluir Conta Permanentemente
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-4 text-sm leading-relaxed">
+                <span className="font-bold text-red-500">Atenção!</span> Essa ação é irreversível. Todos os seus dados, transações e configurações serão apagados.
+              </p>
+
+              <div className="w-full mb-6">
+                <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                    Para confirmar, digite <span className="text-red-500 select-all">DELETAR</span> abaixo:
+                </label>
+                <input 
+                    type="text" 
+                    value={deleteConfirmationInput}
+                    onChange={(e) => setDeleteConfirmationInput(e.target.value)}
+                    placeholder="DELETAR"
+                    className="w-full text-center font-bold text-red-600 border-2 border-red-100 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 transition-all"
+                />
+              </div>
+
+              <div className="flex gap-3 w-full">
+                <button 
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={confirmDeleteAccount}
+                  disabled={deleteConfirmationInput !== 'DELETAR' || isDeleting}
+                  className={`flex-1 py-3 px-4 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${deleteConfirmationInput === 'DELETAR' ? 'bg-red-600 hover:bg-red-700 shadow-red-600/30' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed opacity-70'}`}
+                >
+                  {isDeleting ? <Loader className="animate-spin w-5 h-5" /> : "Confirmar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

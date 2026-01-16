@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
-import { DEFAULT_CATEGORIES } from '../config/constants'; 
+import { useSubscription } from './useSubscription'; 
 
 export const useTransactions = (userId) => {
   const [transactions, setTransactions] = useState([]);
@@ -10,6 +10,15 @@ export const useTransactions = (userId) => {
   const [categories, setCategories] = useState([]); 
   const [paymentMethods, setPaymentMethods] = useState([]); 
   const [remindersLoading, setRemindersLoading] = useState(true);
+
+  const { isPro } = useSubscription();
+
+  const LIMITS = {
+      TRANSACTIONS: 10,
+      CATEGORIES: 3,
+      PAYMENT_METHODS: 3,
+      REMINDERS: 3
+  };
 
   const fetchTransactions = async () => {
     if (!userId) return;
@@ -39,10 +48,10 @@ export const useTransactions = (userId) => {
         .eq('user_id', userId)
         .order('name', { ascending: true });
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         setCategories(data);
       } else {
-        setCategories(DEFAULT_CATEGORIES.map((cat, i) => ({ id: `def-${i}`, name: cat, subcategories: [], color: '#2DD4BF' })));
+        setCategories([]); 
       }
     } catch (err) {
       console.error("Erro categorias:", err);
@@ -67,6 +76,10 @@ export const useTransactions = (userId) => {
   };
 
   const addPaymentMethod = async (name, color = '#2DD4BF') => {
+    if (!isPro && paymentMethods.length >= LIMITS.PAYMENT_METHODS) {
+        return { error: { message: `Limite de ${LIMITS.PAYMENT_METHODS} formas de pagamento atingido (Grátis).` } };
+    }
+
     const { data, error } = await supabase
       .from('payment_methods')
       .insert([{ name, user_id: userId, color }])
@@ -106,6 +119,10 @@ export const useTransactions = (userId) => {
   };
 
   const addCategory = async (name, color = '#2DD4BF') => {
+    if (!isPro && categories.length >= LIMITS.CATEGORIES) {
+        return { error: { message: `Limite de ${LIMITS.CATEGORIES} categorias atingido (Grátis).` } };
+    }
+
     const { data, error } = await supabase
       .from('categories')
       .insert([{ name, user_id: userId, subcategories: [], color }])
@@ -118,6 +135,14 @@ export const useTransactions = (userId) => {
   };
 
   const updateCategory = async (id, updates) => {
+    if (!isPro && updates.subcategories && updates.subcategories.length > 0) {
+        const currentCat = categories.find(c => c.id === id);
+        const currentSubLength = currentCat?.subcategories?.length || 0;
+        if (updates.subcategories.length > currentSubLength) {
+             return { error: { message: "Subcategorias são exclusivas do plano Pro." } };
+        }
+    }
+
     try {
       if (id.toString().startsWith('def-')) {
          const cat = categories.find(c => c.id === id);
@@ -166,14 +191,42 @@ export const useTransactions = (userId) => {
     return { error };
   };
 
-  const fetchReminders = async () => { if(!userId) return; try{ setRemindersLoading(true); const {data, error} = await supabase.from('reminders').select('*').eq('user_id', userId).order('date', {ascending:true}); if(error) throw error; setReminders(data||[]); } catch(e){ console.error(e) } finally{ setRemindersLoading(false) } };
-  const addTransaction = async (t) => { const {data, error} = await supabase.from('transactions').insert([t]).select(); if(!error) setTransactions(p => [data[0], ...p].sort((a,b)=>new Date(b.date)-new Date(a.date))); return {data, error} };
+  const fetchReminders = async () => { 
+      if(!userId) return; 
+      try{ 
+          setRemindersLoading(true); 
+          const {data, error} = await supabase.from('reminders').select('*').eq('user_id', userId).order('date', {ascending:true}); 
+          if(error) throw error; 
+          setReminders(data||[]); 
+      } catch(e){ console.error(e) } finally{ setRemindersLoading(false) } 
+  };
+
+  const addTransaction = async (t) => { 
+      if (!isPro && transactions.length >= LIMITS.TRANSACTIONS) {
+          return { error: { message: `Limite de ${LIMITS.TRANSACTIONS} transações atingido (Grátis).` } };
+      }
+
+      const {data, error} = await supabase.from('transactions').insert([t]).select(); 
+      if(!error) setTransactions(p => [data[0], ...p].sort((a,b)=>new Date(b.date)-new Date(a.date))); 
+      return {data, error} 
+  };
+
   const updateTransaction = async (id, u) => { const {data, error} = await supabase.from('transactions').update(u).eq('id', id).select(); if(!error && data) setTransactions(p => p.map(t => t.id === id ? data[0] : t)); return {data, error} };
   const updateTransactionGroup = async (gid, u) => { const {id, date, ...safe} = u; const {data, error} = await supabase.from('transactions').update(safe).eq('group_id', gid).eq('user_id', userId).select(); if(!error) fetchTransactions(); return {data, error} };
   const deleteTransaction = async (id) => { const {error} = await supabase.from('transactions').delete().eq('id', id); if(!error) setTransactions(p => p.filter(t => t.id !== id)); return {error} };
   const deleteTransactions = async (ids) => { const {error} = await supabase.from('transactions').delete().in('id', ids); if(!error) setTransactions(p => p.filter(t => !ids.includes(t.id))); return {error} };
   const updateTransactionStatus = async (id, s) => { const {error} = await supabase.from('transactions').update({status:s}).eq('id', id); if(!error) setTransactions(p => p.map(t => t.id === id ? {...t, status:s} : t)); return {error} };
-  const addReminder = async (r) => { const {data, error} = await supabase.from('reminders').insert([{...r, user_id: userId}]).select(); if(!error) setReminders(p => [...p, data[0]]); return {data, error} };
+  
+  const addReminder = async (r) => { 
+      if (!isPro && reminders.length >= LIMITS.REMINDERS) {
+          return { error: { message: `Limite de ${LIMITS.REMINDERS} lembretes atingido (Grátis).` } };
+      }
+
+      const {data, error} = await supabase.from('reminders').insert([{...r, user_id: userId}]).select(); 
+      if(!error) setReminders(p => [...p, data[0]]); 
+      return {data, error} 
+  };
+
   const updateReminder = async (id, u) => { const {data, error} = await supabase.from('reminders').update(u).eq('id', id).select(); if(!error && data) setReminders(p => p.map(r => r.id === id ? data[0] : r)); return {data, error} };
   const deleteReminder = async (id) => { const {error} = await supabase.from('reminders').delete().eq('id', id); if(!error) setReminders(p => p.filter(r => r.id !== id)); return {error} };
 

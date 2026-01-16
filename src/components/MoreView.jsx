@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, FileText, ChevronRight, Info, ArrowLeft, LogOut, AlertCircle } from 'lucide-react';
+import { Settings, FileText, ChevronRight, Info, ArrowLeft, LogOut } from 'lucide-react';
 import Card from './UI/Card';
 import SettingsView from './SettingsView';
 import ReportsView from './ReportsView';
@@ -10,7 +10,9 @@ const MoreView = ({
   isDarkMode, 
   setIsDarkMode,
   onLogout,
-  resetKey 
+  resetKey,
+  isPro = false,
+  customRole = null
 }) => {
   
   const [subView, setSubView] = useState('menu'); 
@@ -23,11 +25,47 @@ const MoreView = ({
     }
   }, [resetKey]);
 
+  const getDisplayName = () => {
+    return user?.user_metadata?.name || 'Usuário';
+  };
+
+  const getAvatarUrl = () => {
+    return user?.user_metadata?.avatar_url;
+  };
+
   if (subView === 'menu') {
     return (
       <div className="animate-fadeIn pb-24 font-inter relative">
-        <h2 className="text-2xl font-bold mb-6 text-teal dark:text-white font-poppins">Mais Opções</h2>
-        
+        <h2 className="text-2xl font-bold mb-4 text-teal dark:text-white font-poppins">Mais Opções</h2>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4 mb-6">
+            <div className="w-14 h-14 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border-2 border-mint shrink-0">
+                {getAvatarUrl() ? (
+                  <img src={getAvatarUrl()} alt="Perfil" className="w-full h-full object-cover" />
+                ) : ( user?.email?.charAt(0).toUpperCase() )}
+            </div>
+            <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg truncate">{getDisplayName()}</h3>
+                <div className="flex items-center gap-2 mt-0.5">
+                    {customRole === 'Desenvolvedora' ? (
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-bold border border-purple-200 dark:border-purple-800">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                        Desenvolvedora
+                      </div>
+                    ) : isPro ? (
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-bold border border-amber-200 dark:border-amber-800">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        Plano Pro
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                        Gratuito
+                      </div>
+                    )}
+                </div>
+            </div>
+        </div>
+
         <div className="space-y-4">
           
           <button 
@@ -68,8 +106,8 @@ const MoreView = ({
               <h3 className="font-bold text-teal dark:text-white">Sobre o App</h3>
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-               <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.0.34 (Beta)</span></p>
-               <p className="flex justify-between"><span>Última Atualização:</span><span>13 JAN 2026</span></p>
+               <p className="flex justify-between"><span>Versão Atual:</span><span className="font-mono font-bold text-teal dark:text-white">v1.1.0</span></p>
+               <p className="flex justify-between"><span>Última Atualização:</span><span>16 JAN 2026</span></p>
               <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400">
                 Feito com 💜 por <a href="https://portfolio--beatriz.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-mint font-bold hover:underline transition-all">Beatriz Pires</a>
               </div>
@@ -133,6 +171,8 @@ const MoreView = ({
           isDarkMode={isDarkMode} 
           setIsDarkMode={setIsDarkMode} 
           onLogout={onLogout} 
+          isPro={isPro}
+          customRole={customRole}
         />
       </div>
     );
@@ -144,7 +184,7 @@ const MoreView = ({
         <button onClick={() => setSubView('menu')} className="flex items-center gap-2 text-gray-500 mb-4 hover:text-teal transition-colors">
           <ArrowLeft size={20} /> Voltar para Mais
         </button>
-        <ReportsView transactions={transactions} />
+        <ReportsView transactions={transactions} isPro={isPro} />
       </div>
     );
   }

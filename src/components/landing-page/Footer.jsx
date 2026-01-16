@@ -1,34 +1,69 @@
 import React, { useState } from "react";
-import { Heart, X, Shield, AlertTriangle } from "lucide-react";
+import { Heart, X, Shield, FileText, Lock } from "lucide-react";
 
 const LEGAL_CONTENT = {
   privacy: (
-    <div className="space-y-4 text-slate-600">
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3 text-amber-800 text-sm mb-4">
-        <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-        <p>Este aplicativo está em fase <strong>BETA PÚBLICO</strong>. Funcionalidades podem mudar sem aviso prévio.</p>
+    <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
+      <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-4 flex gap-3 text-emerald-800 text-sm mb-4">
+        <Lock className="w-5 h-5 flex-shrink-0" />
+        <p>Sua segurança é nossa prioridade. Utilizamos criptografia de nível bancário em trânsito e em repouso.</p>
       </div>
+      
       <p>
-        <strong>1. Coleta de Dados:</strong> Para o funcionamento do sistema, armazenamos as informações de receitas e despesas que você cadastra. Seus dados são seus e não são vendidos para terceiros.
+        <strong>1. Coleta de Informações:</strong>
+        <br />
+        Coletamos apenas o necessário para o funcionamento do serviço: dados de cadastro (nome, e-mail) e os dados financeiros que você insere manualmente (receitas, despesas e categorias).
       </p>
+      
       <p>
-        <strong>2. Segurança:</strong> Utilizamos protocolos padrão de segurança, mas como software em fase de testes, recomendamos não utilizar senhas que você usa em bancos ou serviços críticos.
+        <strong>2. Uso dos Dados:</strong>
+        <br />
+        Seus dados financeiros são utilizados exclusivamente para gerar seus gráficos e relatórios. <strong>Nós não vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros</strong> para fins de marketing.
       </p>
+
       <p>
-        <strong>3. Exclusão:</strong> Você pode solicitar a exclusão completa dos seus dados a qualquer momento entrando em contato com a desenvolvedora.
+        <strong>3. Processamento de Pagamentos:</strong>
+        <br />
+        Para assinaturas do plano Pro, utilizamos o <strong>Stripe</strong>, uma das plataformas de pagamento mais seguras do mundo. Nós não armazenamos os dados do seu cartão de crédito em nossos servidores.
+      </p>
+
+      <p>
+        <strong>4. Seus Direitos:</strong>
+        <br />
+        Você tem total controle. Pode exportar seus dados ou solicitar a exclusão completa da sua conta e de todas as informações associadas a qualquer momento através do painel de configurações.
       </p>
     </div>
   ),
   terms: (
-    <div className="space-y-4 text-slate-600">
+    <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
       <p>
-        <strong>1. Uso:</strong> O GerenciaDin é fornecido "no estado em que se encontra". Embora nos esforcemos para garantir a precisão dos cálculos, não nos responsabilizamos por decisões financeiras tomadas com base neles.
+        <strong>1. O Serviço:</strong>
+        <br />
+        O GerenciaDin é uma plataforma SaaS (Software as a Service) de gestão financeira pessoal. Oferecemos ferramentas para organização de receitas, despesas e visualização de relatórios.
       </p>
+
       <p>
-        <strong>2. Fase Beta:</strong> Ao utilizar o sistema agora, você entende que bugs podem ocorrer e que o histórico de dados pode sofrer resets (com aviso prévio sempre que possível) para atualizações de estrutura.
+        <strong>2. Planos e Assinaturas:</strong>
+        <br />
+        O sistema oferece um plano Gratuito (com limitações) e um plano Pro (assinatura). Ao assinar o plano Pro, você concorda com a cobrança recorrente (mensal ou anual) processada de forma segura. O cancelamento pode ser feito a qualquer momento para evitar renovações futuras.
       </p>
+
       <p>
-        <strong>3. Gratuidade:</strong> Durante o período Beta, todas as funcionalidades estão liberadas gratuitamente para fins de teste e feedback.
+        <strong>3. Responsabilidades:</strong>
+        <br />
+        O usuário é responsável por manter a confidencialidade de sua senha. O GerenciaDin não se responsabiliza por perdas decorrentes de acesso não autorizado causado por descuido do usuário com suas credenciais.
+      </p>
+
+      <p>
+        <strong>4. Isenção de Responsabilidade Financeira:</strong>
+        <br />
+        Nossos relatórios são informativos. O GerenciaDin não oferece consultoria financeira, fiscal ou de investimentos. Decisões econômicas tomadas com base nos dados da plataforma são de inteira responsabilidade do usuário.
+      </p>
+
+      <p>
+        <strong>5. Disponibilidade:</strong>
+        <br />
+        Nos esforçamos para manter o serviço disponível 99.9% do tempo, mas interrupções para manutenção ou atualizações podem ocorrer.
       </p>
     </div>
   )
@@ -39,8 +74,12 @@ const Modal = ({ isOpen, onClose, title, icon: Icon, children }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+      <div 
+        className="fixed inset-0" 
+        onClick={onClose}
+      ></div>
+      <div className="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden animate-in slide-in-from-bottom-4 duration-300 flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
               <Icon size={20} />
@@ -51,11 +90,13 @@ const Modal = ({ isOpen, onClose, title, icon: Icon, children }) => {
             <X size={20} />
           </button>
         </div>
-        <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+        
+        <div className="p-6 overflow-y-auto custom-scrollbar">
           {children}
         </div>
-        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
-          <button onClick={onClose} className="px-6 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-colors">
+        
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end flex-shrink-0">
+          <button onClick={onClose} className="px-6 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10">
             Entendido
           </button>
         </div>
@@ -92,7 +133,7 @@ const Footer = () => {
                 <span className="text-slate-900">Gerencia<span className="text-emerald-600">Din</span></span>
               </div>
               <p className="text-slate-400 text-xs">
-                © 2026 GerenciaDin. Todos os direitos reservados.
+                © {new Date().getFullYear()} GerenciaDin. Todos os direitos reservados.
               </p>
             </div>
 
@@ -103,7 +144,7 @@ const Footer = () => {
               <button onClick={() => scrollToSection('faq')} className="hover:text-emerald-600 transition-colors">FAQ</button>
               <span className="text-slate-300 hidden sm:inline">|</span>
               <button onClick={() => setActiveModal('privacy')} className="hover:text-emerald-600 transition-colors">Privacidade</button>
-              <button onClick={() => setActiveModal('terms')} className="hover:text-emerald-600 transition-colors">Termos</button>
+              <button onClick={() => setActiveModal('terms')} className="hover:text-emerald-600 transition-colors">Termos de Uso</button>
             </nav>
 
             <div className="flex items-center justify-center md:justify-end">
@@ -127,7 +168,7 @@ const Footer = () => {
       <Modal 
         isOpen={activeModal === 'privacy'} 
         onClose={() => setActiveModal(null)}
-        title="Política de Privacidade (Beta)"
+        title="Política de Privacidade"
         icon={Shield}
       >
         {LEGAL_CONTENT.privacy}
@@ -136,8 +177,8 @@ const Footer = () => {
       <Modal 
         isOpen={activeModal === 'terms'} 
         onClose={() => setActiveModal(null)}
-        title="Termos de Uso (Beta)"
-        icon={AlertTriangle}
+        title="Termos de Uso"
+        icon={FileText}
       >
         {LEGAL_CONTENT.terms}
       </Modal>

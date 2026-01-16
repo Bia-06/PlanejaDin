@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import { 
   Bell, CalendarIcon, Plus, Trash2, Pencil, CheckCircle, 
-  Clock, RotateCcw, ChevronDown, ChevronUp, Filter, CalendarDays 
+  Clock, RotateCcw, ChevronDown, ChevronUp, Filter, CalendarDays, Lock 
 } from 'lucide-react';
 import Button from './UI/Button';
 import { formatDate, getLocalDateString } from '../utils/formatters';
 
-const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder }) => {
+const RemindersView = ({ 
+  reminders = [], 
+  handleDelete, 
+  openModal, 
+  updateReminder,
+  isPro = false 
+}) => {
+  
   const [showHistory, setShowHistory] = useState(false);
   const [filterType, setFilterType] = useState('all'); 
 
@@ -40,6 +47,14 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
     }
   };
 
+  const handleNewReminder = () => {
+    if (!isPro && activeReminders.length >= 3) {
+        alert("Você atingiu o limite de 3 lembretes ativos no plano gratuito. Faça Upgrade para criar ilimitados!");
+        return;
+    }
+    openModal('reminder');
+  };
+
   const ReminderCard = ({ rem, isCompleted }) => {
       const isOverdue = !isCompleted && rem.date < todayStr;
       const isToday = !isCompleted && rem.date === todayStr;
@@ -54,9 +69,9 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
 
       return (
         <div className={`
-            bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm flex justify-between items-start 
-            hover:shadow-md transition-all border border-gray-100 dark:border-gray-700 relative overflow-hidden group
-            ${isCompleted ? 'opacity-75 bg-gray-50 dark:bg-gray-800/50' : `border-l-8 ${borderClass}`}
+          bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm flex justify-between items-start 
+          hover:shadow-md transition-all border border-gray-100 dark:border-gray-700 relative overflow-hidden group
+          ${isCompleted ? 'opacity-75 bg-gray-50 dark:bg-gray-800/50' : `border-l-8 ${borderClass}`}
         `}>
           
           <div className="flex-1 min-w-0 pr-3">
@@ -141,9 +156,20 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold text-teal dark:text-white font-poppins flex items-center gap-2">
            Lembretes
+           {!isPro && (
+               <span className={`text-xs font-normal px-2 py-1 rounded-full border ${activeReminders.length >= 3 ? 'bg-red-100 text-red-600 border-red-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                   {activeReminders.length}/3 ativos
+               </span>
+           )}
         </h2>
-        <Button onClick={() => openModal('reminder')} variant="primary" className="text-sm px-4 py-2 w-full sm:w-auto">
-          <Plus className="w-5 h-5" /> Novo Lembrete
+        
+        <Button 
+            onClick={handleNewReminder} 
+            variant={!isPro && activeReminders.length >= 3 ? "secondary" : "primary"} 
+            className="text-sm px-4 py-2 w-full sm:w-auto"
+        >
+          {!isPro && activeReminders.length >= 3 ? <Lock className="w-4 h-4 mr-2" /> : <Plus className="w-5 h-5" />}
+          Novo Lembrete
         </Button>
       </div>
 
@@ -222,7 +248,6 @@ const RemindersView = ({ reminders = [], handleDelete, openModal, updateReminder
                 )}
           </div>
       )}
-
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { ArrowRight, Play, CheckCircle2 } from "lucide-react";
 
 const HeroSection = ({ onLoginClick }) => {
   return (
-    <section className="relative min-h-screen pt-32 pb-16 overflow-hidden bg-gradient-hero">
+    <section className="relative pt-32 pb-12 lg:pb-20 overflow-hidden bg-gradient-hero">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl" />
         <div className="absolute top-1/2 -left-20 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl" />
@@ -16,7 +16,7 @@ const HeroSection = ({ onLoginClick }) => {
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-medium mb-6 animate-fade-in">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Versão 1.0.34 (BETA)
+              Versão 1.1.0
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 leading-tight mb-6 animate-fade-up">

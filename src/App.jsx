@@ -15,23 +15,31 @@ import Select from './components/UI/Select';
 import Button from './components/UI/Button';
 import Logo from './components/UI/Logo';
 import LandingPage from './components/LandingPage';
-import NotificationBell from './components/NotificationBell'; 
-
+import NotificationBell from './components/NotificationBell';
+import { useSubscription } from './hooks/useSubscription';
 import { useTransactions } from './hooks/useTransactions';
-
 import { 
   LayoutDashboard, List, FileText, Bell, CalendarIcon, Settings, Repeat, Layers, Menu, Tag, CalendarDays
 } from 'lucide-react';
-
 import { 
   parseCommaValue, getLocalDateString, formatValueForInput, 
   handleAmountInputChange 
 } from './utils/formatters';
 
 export default function App() {
-
   const [showAuthScreen, setShowAuthScreen] = useState(false);
-  const { user: authUser, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { isPro, customRole } = useSubscription();
+
+  const { 
+    transactions, reminders, categories, paymentMethods, 
+    addTransaction, updateTransaction, updateTransactionGroup, 
+    deleteTransaction, deleteTransactions, updateTransactionStatus,
+    addReminder, updateReminder, deleteReminder,
+    addCategory, updateCategory, deleteCategory,
+    addPaymentMethod, updatePaymentMethod, deletePaymentMethod 
+  } = useTransactions(user?.id);
+
   const [view, setView] = useState('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,59 +47,14 @@ export default function App() {
   const [transactionType, setTransactionType] = useState('expense');
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-
   const [editingId, setEditingId] = useState(null);
   const [editScope, setEditScope] = useState('single');
-  
   const [resetMoreKey, setResetMoreKey] = useState(0);
- 
-  const DEBUG_MODE = false; 
-  let user = authUser;
-  let loading = authLoading;
-
-  if (DEBUG_MODE && !user && !loading) {
-    user = {
-      id: 'dev-user-' + Date.now(),
-      email: 'dev@test.com',
-      user_metadata: { name: 'Desenvolvedor', phone: '11999999999', address: 'Rua Exemplo, 123' }
-    };
-    loading = false;
-  }
-
-  const { 
-    transactions, 
-    reminders, 
-    categories,
-    paymentMethods, 
-    addTransaction,
-    updateTransaction,      
-    updateTransactionGroup, 
-    deleteTransaction,
-    deleteTransactions, 
-    updateTransactionStatus,
-    addReminder,
-    updateReminder,
-    deleteReminder,
-    addCategory,
-    updateCategory, 
-    deleteCategory,
-    addPaymentMethod, 
-    updatePaymentMethod, 
-    deletePaymentMethod 
-  } = useTransactions(user?.id);
 
   const [form, setForm] = useState({
-    description: '', 
-    amount: '', 
-    type: 'expense', 
-    category: '', 
-    subcategory: '', 
-    paymentMethod: '', 
-    date: getLocalDateString(), 
-    status: 'pending', 
-    recurrence: '', 
-    installments: 2, 
-    group_id: null
+    description: '', amount: '', type: 'expense', category: '', subcategory: '', 
+    paymentMethod: '', date: getLocalDateString(), status: 'pending', 
+    recurrence: '', installments: 2, group_id: null
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -101,16 +64,7 @@ export default function App() {
     const date = new Date();
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
     const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0];
-    
-    return { 
-        type: 'all', 
-        category: 'all', 
-        status: 'all', 
-        startDate: firstDay, 
-        endDate: lastDay,    
-        minAmount: '', 
-        maxAmount: '' 
-    };
+    return { type: 'all', category: 'all', status: 'all', startDate: firstDay, endDate: lastDay, minAmount: '', maxAmount: '' };
   });
 
   useEffect(() => {
@@ -132,22 +86,25 @@ export default function App() {
       if (signOut && typeof signOut === 'function') {
         await signOut();
         setShowAuthScreen(false);
-        console.log('Logout realizado com sucesso');
       }
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }
   };
 
-  const categoryOptions = categories.map(cat => ({
-    value: cat.name,
-    label: cat.name
-  }));
+  const categoryOptions = categories.map(cat => ({ value: cat.name, label: cat.name }));
+  const paymentMethodOptions = paymentMethods.map(method => ({ value: method.name, label: method.name }));
 
-  const paymentMethodOptions = paymentMethods.map(method => ({
-    value: method.name,
-    label: method.name
-  }));
+  const formatDisplayName = (fullName) => {
+    if (!fullName) return 'Usuário';
+    const parts = fullName.trim().split(/\s+/); 
+    if (parts.length > 1) {
+      const firstName = parts[0];
+      const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+      return `${firstName} ${lastInitial}.`;
+    }
+    return parts[0]; 
+  };
 
   const todayStr = getLocalDateString();
   const now = new Date();
@@ -164,13 +121,10 @@ export default function App() {
     income: transactions
       .filter(t => t.type === 'income' && t.status === 'paid' && isCurrentMonth(t.date))
       .reduce((acc, curr) => acc + curr.amount, 0),
-    
     expense: transactions
       .filter(t => t.type === 'expense' && t.status === 'paid' && isCurrentMonth(t.date))
       .reduce((acc, curr) => acc + curr.amount, 0),
-    
     balance: 0,
-    
     pendingBills: transactions
       .filter(t => t.type === 'expense' && t.status === 'pending' && t.date <= todayStr)
       .reduce((acc, curr) => acc + curr.amount, 0)
@@ -217,17 +171,9 @@ export default function App() {
       } else {
         setEditingId(null);
         setForm({
-            description: '', 
-            amount: '', 
-            type: subType, 
-            category: '', 
-            subcategory: '',
-            paymentMethod: '', 
-            date: getLocalDateString(), 
-            status: 'pending', 
-            recurrence: '', 
-            installments: 2, 
-            group_id: null
+            description: '', amount: '', type: subType, category: '', subcategory: '',
+            paymentMethod: '', date: getLocalDateString(), status: 'pending', 
+            recurrence: '', installments: 2, group_id: null
         });
       }
     } 
@@ -244,23 +190,14 @@ export default function App() {
             setReminderForm({ title: '', date: getLocalDateString(), details: '' });
         }
     }
-    
     setIsModalOpen(true);
   };
 
   const resetForms = () => {
     setForm({ 
-      description: '', 
-      amount: '', 
-      type: 'expense', 
-      category: '', 
-      subcategory: '', 
-      paymentMethod: '', 
-      date: getLocalDateString(), 
-      status: 'pending', 
-      recurrence: '', 
-      installments: 2, 
-      group_id: null 
+      description: '', amount: '', type: 'expense', category: '', subcategory: '', 
+      paymentMethod: '', date: getLocalDateString(), status: 'pending', 
+      recurrence: '', installments: 2, group_id: null 
     });
     setReminderForm({ title: '', date: getLocalDateString(), details: '' });
     setFormErrors({});
@@ -394,7 +331,7 @@ export default function App() {
 
   const renderView = () => {
     switch (view) {
-      case 'dashboard': return <DashboardView user={user} summary={summary} chartData={chartDataArray} reminders={reminders} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} openModal={openModal} setView={setView} />;
+      case 'dashboard': return <DashboardView user={user} summary={summary} chartData={chartDataArray} reminders={reminders} categories={categories} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} openModal={openModal} setView={setView} transactions={transactions} isPro={isPro}/>;
       case 'transactions': 
         return (
             <TransactionsView 
@@ -409,11 +346,12 @@ export default function App() {
                 openModal={openModal} 
                 handleToggleStatus={handleToggleStatus} 
                 handleDelete={handleDelete} 
-                handleBatchDelete={handleBatchDelete} 
+                handleBatchDelete={handleBatchDelete}
+                isPro={isPro}
             />
         );
-      case 'reports': return <ReportsView transactions={transactions} categories={categories} paymentMethods={paymentMethods} />;
-      case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} updateReminder={updateReminder} />;
+      case 'reports': return <ReportsView transactions={transactions} categories={categories} paymentMethods={paymentMethods} isPro={isPro} />;
+      case 'reminders': return <RemindersView reminders={reminders} handleDelete={handleDelete} openModal={openModal} updateReminder={updateReminder} isPro={isPro} />;
       case 'calendar': return (
         <div className="w-full"> 
             <CalendarView 
@@ -425,11 +363,12 @@ export default function App() {
               onDeleteReminder={(id) => handleDelete('reminders', id)}
               onToggleReminder={handleToggleReminder}
               onToggleStatus={handleToggleStatus}
+              isPro={isPro}
             />
         </div>
       );
       case 'categories': return (
-        <div className="animate-fadeIn max-w-4xl mx-auto">
+        <div className="animate-fadeIn w-full mx-auto">
               <h2 className="text-2xl font-bold mb-6 text-teal dark:text-white font-poppins">Categorias & Pagamentos</h2>
               <CategoriesView 
                 categories={categories}
@@ -440,12 +379,23 @@ export default function App() {
                 addPaymentMethod={addPaymentMethod}
                 updatePaymentMethod={updatePaymentMethod} 
                 deletePaymentMethod={deletePaymentMethod}
-                transactions={transactions} 
+                transactions={transactions}
+                isPro={isPro}
              />
         </div>
       );
-      case 'settings': return <SettingsView user={user} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} onLogout={handleLogout} />;
-      case 'more': return <MoreView user={user} transactions={transactions} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} onLogout={handleLogout} resetKey={resetMoreKey} />;
+      case 'settings': return <SettingsView user={user} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} onLogout={handleLogout} isPro={isPro} customRole={customRole}/>;
+      case 'more': 
+        return <MoreView 
+          user={user} 
+          transactions={transactions} 
+          isDarkMode={isDarkMode} 
+          setIsDarkMode={setIsDarkMode} 
+          onLogout={handleLogout} 
+          resetKey={resetMoreKey}
+          isPro={isPro}          
+          customRole={customRole} 
+        />;
       default: return <DashboardView />;
     }
   };
@@ -460,7 +410,7 @@ export default function App() {
     { id: 'settings', icon: Settings, label: 'Configurações' }
   ];
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-bgLight dark:bg-gray-900">
         <div className="animate-spin w-10 h-10 border-4 border-mint border-t-transparent rounded-full"></div>
@@ -495,14 +445,31 @@ export default function App() {
       `}</style>
       
       <div className="flex flex-col md:flex-row h-full overflow-hidden">
- 
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 shrink-0 z-20">
-            <Logo size="small" />
+            <div className="flex items-center gap-2">
+                <Logo size="small" />
+                {isPro && (
+                  <div className="px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 animate-fadeIn">
+                    {customRole === 'Desenvolvedora' ? (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                        <span className="text-purple-600 dark:text-purple-400">Dev</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        <span className="text-amber-600">Pro</span>
+                      </>
+                    )}
+                  </div>
+                )}
+            </div>
+            
             <div className="flex items-center gap-3">
                 <NotificationBell />
                 <div 
                     onClick={() => { setView('more'); setResetMoreKey(prev => prev + 1); }}
-                    className="w-8 h-8 rounded-full bg-teal text-white flex items-center justify-center font-bold overflow-hidden border border-gray-200 dark:border-gray-600 cursor-pointer"
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold overflow-hidden border cursor-pointer ${isPro ? 'border-purple-300 dark:border-purple-600' : 'border-gray-200 dark:border-gray-600'} bg-teal text-white`}
                 >
                     {user?.user_metadata?.avatar_url ? (
                     <img src={user.user_metadata.avatar_url} alt="Perfil" className="w-full h-full object-cover" />
@@ -538,18 +505,26 @@ export default function App() {
                   
                   <div className="overflow-hidden text-left">
                     <p className="text-sm font-bold text-teal dark:text-white truncate">
-                        {(() => {
-                           const name = user?.user_metadata?.name || 'Usuário';
-                           const parts = name.trim().split(/\s+/);
-                           if (parts.length > 1) {
-                               return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
-                           }
-                           return parts[0];
-                        })()}
+                        {formatDisplayName(user?.user_metadata?.name)}
                     </p>
+                    
                     <p className="text-[10px] text-gray-500 truncate flex items-center gap-1.5 mt-0.5 font-medium">
-                      <span className="w-1.5 h-1.5 rounded-full bg-mint"></span>
-                      Plano Gratuito
+                      {customRole === 'Desenvolvedora' ? (
+                          <>
+                           <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                           <span className="text-purple-600 dark:text-purple-400 font-bold">Desenvolvedora</span>
+                          </>
+                        ) : isPro ? (
+                          <>
+                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                           <span className="text-amber-600 font-bold">Plano Pro</span>
+                          </>
+                        ) : (
+                          <>
+                           <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                           Plano Gratuito
+                          </>
+                        )}
                     </p>
                   </div>
                 </div>
@@ -560,8 +535,8 @@ export default function App() {
           </div>
         </aside>
 
-        <main className="flex-1 overflow-y-auto relative bg-bgLight dark:bg-gray-900 pb-24 md:pb-0 w-full overflow-x-hidden">
-          <div className="w-full max-w-5xl xl:max-w-7xl 2xl:max-w-[1800px] mx-auto p-4 md:p-10 2xl:p-14">
+        <main className={`flex-1 relative bg-bgLight dark:bg-gray-900 pb-24 md:pb-0 w-full overflow-x-hidden md:h-screen ${view === 'dashboard' ? 'md:overflow-hidden' : 'md:overflow-y-auto custom-scrollbar'}`}>
+          <div className="w-full max-w-5xl xl:max-w-7xl mx-auto p-4 md:p-6 h-full flex flex-col">
             {renderView()}
           </div>
         </main>
@@ -579,7 +554,7 @@ export default function App() {
             </button>
         </nav>
       </div>
- 
+
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'transaction' ? (editingId ? "Editar Transação" : (transactionType === 'income' ? "Nova Receita" : "Nova Despesa")) : (editingId ? "Editar Lembrete" : "Novo Lembrete")}>
         {modalType === 'transaction' ? (
           <form onSubmit={handleSaveTransaction} className="space-y-3">
