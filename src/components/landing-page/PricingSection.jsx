@@ -1,8 +1,14 @@
 import React from "react";
 import { Button } from "@/components/shadcn/button";
-import { Check, ArrowRight, Sparkles, Star, Calendar, PieChart, ShieldCheck } from "lucide-react"; 
+import { Check, ArrowRight, Sparkles, Star, Calendar, ShieldCheck, Loader2 } from "lucide-react"; 
 import { cn } from "@/lib/utils";
 import ScrollReveal from "../UI/ScrollReveal"; 
+import { useSubscription } from "../../hooks/useSubscription"; 
+
+const STRIPE_IDS = {
+    MENSAL: 'price_1SqJt2KqdupDv88N85NkvsUg', 
+    ANUAL: 'price_1SqJvdKqdupDv88NbZVENBUo'  
+};
 
 const pricingData = [
   {
@@ -66,6 +72,31 @@ const pricingData = [
 ];
 
 const PricingSection = ({ onLoginClick }) => {
+  const { handleCheckout, checkoutLoading } = useSubscription();
+
+  const handlePlanClick = async (planId) => {
+    if (planId === 'freemium') {
+        onLoginClick();
+        return;
+    }
+
+    let priceId = '';
+    let isMonthly = false;
+
+    if (planId === 'mensal') {
+        priceId = STRIPE_IDS.MENSAL;
+        isMonthly = true;
+    } else if (planId === 'anual') {
+        priceId = STRIPE_IDS.ANUAL;
+        isMonthly = false;
+    }
+
+    const isLoggedIn = await handleCheckout(priceId, isMonthly);
+    if (!isLoggedIn) {
+        onLoginClick();
+    }
+  };
+
   return (
     <section id="pricing" className="py-20 md:py-28 bg-slate-50 border-t border-slate-200">
       <div className="container mx-auto px-4">
@@ -173,7 +204,8 @@ const PricingSection = ({ onLoginClick }) => {
 
                     <Button
                       size="lg" 
-                      onClick={onLoginClick}
+                      onClick={() => handlePlanClick(plan.id)}
+                      disabled={checkoutLoading}
                       variant={plan.ctaVariant === "outline" ? "outline" : "default"}
                       className={cn(
                         "w-full mb-6 h-12 text-base font-bold rounded-xl transition-all duration-300",
@@ -182,8 +214,11 @@ const PricingSection = ({ onLoginClick }) => {
                           : "text-slate-600 border-2 border-slate-200 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50"
                       )}
                     >
-                      {plan.cta}
-                      <ArrowRight className="ml-2 w-4 h-4" />
+                      {checkoutLoading && plan.id !== 'freemium' ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processando...</>
+                      ) : (
+                          <>{plan.cta} <ArrowRight className="ml-2 w-4 h-4" /></>
+                      )}
                     </Button>
 
                     <div
@@ -203,7 +238,7 @@ const PricingSection = ({ onLoginClick }) => {
         </div>
         
         <div className="mt-16 text-center">
-             <div className="inline-block bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm max-w-2xl mx-auto">
+              <div className="inline-block bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm max-w-2xl mx-auto">
                 <div className="flex items-start gap-3 text-left">
                     <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600 shrink-0">
                         <Calendar className="w-5 h-5" />

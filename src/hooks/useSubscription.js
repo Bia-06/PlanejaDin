@@ -6,6 +6,7 @@ export function useSubscription() {
   const [isPro, setIsPro] = useState(false);
   const [customRole, setCustomRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -80,10 +81,49 @@ export function useSubscription() {
     };
   }, []);
 
+  const handleCheckout = async (priceId, isMonthly) => {
+    setCheckoutLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setCheckoutLoading(false);
+        return false; 
+      }
+
+      const response = await fetch('https://agkiucerpgabynaqulxy.supabase.co/functions/v1/stripe-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          priceId,
+          isMonthly, 
+          returnUrl: window.location.origin 
+        }),
+      });
+
+      const { url, error } = await response.json();
+      if (error) throw new Error(error);
+      
+      if (url) window.location.href = url;
+      return true;
+
+    } catch (error) {
+      console.error('Erro no checkout:', error);
+      alert('Erro ao iniciar pagamento. Tente novamente.');
+      setCheckoutLoading(false);
+      return true; 
+    }
+  };
+
   return {
     plan,
     isPro,
     customRole,
-    loading
+    loading,
+    handleCheckout, 
+    checkoutLoading 
   };
-} 
+}
